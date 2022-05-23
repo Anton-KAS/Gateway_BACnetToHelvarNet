@@ -13,7 +13,7 @@ import org.json.JSONObject;
 
 public class ExcelParser {
     private String dirPath = "../src/main/resources/kas/excel/";
-    private String fileName = "Test.xlsx";
+    private String fileName = "configPoints.xlsx";
 
     public ExcelParser() {
     }

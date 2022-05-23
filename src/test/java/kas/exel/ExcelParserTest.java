@@ -19,7 +19,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 public class ExcelParserTest {
     ExcelParser excel;
     String dirPath = "./src/test/resources/kas/excel/";
-    String fileName = "Test.xlsx";
+    String fileName = "configPoints.xlsx";
 
     @BeforeAll
     public static void started() {
