@@ -22,7 +22,8 @@ dependencies {
     implementation 'org.json:json:20220320'
     implementation 'com.googlecode.json-simple:json-simple:1.1.1'
 
-
+    // https://mvnrepository.com/artifact/com.infiniteautomation/bacnet4j
+    implementation 'com.infiniteautomation:bacnet4j:6.0.0'
 
 }
 
