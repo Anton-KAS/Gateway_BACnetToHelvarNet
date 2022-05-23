@@ -1,0 +1,50 @@
+{
+  "10.119.140.87": {
+    "Points": {
+      "286": {
+        "HELVAR_GROUP": 286,
+        "DIMMING": true,
+        "ROOM": "2.20.1",
+        "ELECTRIC_GROUP": "33D"
+      },
+      "287": {
+        "HELVAR_GROUP": 287,
+        "DIMMING": true,
+        "ROOM": "2.20.2",
+        "ELECTRIC_GROUP": "34D"
+      },
+      "257": {
+        "HELVAR_GROUP": 257,
+        "DIMMING": false,
+        "ROOM": "2.15",
+        "ELECTRIC_GROUP": "20, A20"
+      }
+    },
+    "IP_CONTROLLER": "10.119.140.87",
+    "LIGHT_PANEL": "ЩО-2.1"
+  },
+  "10.119.140.86": {
+    "Points": {
+      "1": {
+        "HELVAR_GROUP": 1,
+        "DIMMING": false,
+        "ROOM": "1.1",
+        "ELECTRIC_GROUP": "1, A1"
+      },
+      "2": {
+        "HELVAR_GROUP": 2,
+        "DIMMING": true,
+        "ROOM": "1.2",
+        "ELECTRIC_GROUP": "2"
+      },
+      "3": {
+        "HELVAR_GROUP": 3,
+        "DIMMING": true,
+        "ROOM": "1.2",
+        "ELECTRIC_GROUP": "3"
+      }
+    },
+    "IP_CONTROLLER": "10.119.140.86",
+    "LIGHT_PANEL": "ЩО-2.1"
+  }
+}
