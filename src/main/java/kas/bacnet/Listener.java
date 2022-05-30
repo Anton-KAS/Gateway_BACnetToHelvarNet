@@ -4,9 +4,7 @@ import com.serotonin.bacnet4j.RemoteDevice;
 import com.serotonin.bacnet4j.RemoteObject;
 import com.serotonin.bacnet4j.event.DeviceEventListener;
 import com.serotonin.bacnet4j.obj.BACnetObject;
-import com.serotonin.bacnet4j.obj.BACnetObjectListener;
 import com.serotonin.bacnet4j.service.Service;
-import com.serotonin.bacnet4j.type.Encodable;
 import com.serotonin.bacnet4j.type.constructed.*;
 import com.serotonin.bacnet4j.type.enumerated.*;
 import com.serotonin.bacnet4j.type.notificationParameters.NotificationParameters;
@@ -33,12 +31,7 @@ public class Listener implements DeviceEventListener {
 
     @Override
     public void propertyWritten(Address from, BACnetObject obj, PropertyValue pv) {
-        System.out.println("Listener: propertyWritten");
-        System.out.println("\tAddress from:\t" + from);
-        System.out.println("\tBACnetObject:\t" + obj);
-        System.out.println("\tPropertyValue:\t" + pv);
-        // TODO: Add to ReceivedList
-
+        BACnetReceivedObjectList.RECEIVED_OBJECT_LIST.addValueInTheEnd(from, obj, pv);
     }
 
     @Override
@@ -47,25 +40,17 @@ public class Listener implements DeviceEventListener {
     }
 
     @Override
-    public void covNotificationReceived(UnsignedInteger subscriberProcessIdentifier, ObjectIdentifier initiatingDeviceIdentifier,
-                                        ObjectIdentifier monitoredObjectIdentifier, UnsignedInteger timeRemaining,
-                                        SequenceOf<PropertyValue> listOfValues) {
+    public void covNotificationReceived(UnsignedInteger subscriberProcessIdentifier, ObjectIdentifier initiatingDeviceIdentifier, ObjectIdentifier monitoredObjectIdentifier, UnsignedInteger timeRemaining, SequenceOf<PropertyValue> listOfValues) {
         System.out.println("Listener: covNotificationReceived");
     }
 
     @Override
-    public void eventNotificationReceived(UnsignedInteger processIdentifier, ObjectIdentifier initiatingDeviceIdentifier,
-                                          ObjectIdentifier eventObjectIdentifier, TimeStamp timeStamp,
-                                          UnsignedInteger notificationClass, UnsignedInteger priority,
-                                          EventType eventType, CharacterString messageText, NotifyType notifyType,
-                                          Boolean ackRequired, EventState fromState, EventState toState,
-                                          NotificationParameters eventValues) {
+    public void eventNotificationReceived(UnsignedInteger processIdentifier, ObjectIdentifier initiatingDeviceIdentifier, ObjectIdentifier eventObjectIdentifier, TimeStamp timeStamp, UnsignedInteger notificationClass, UnsignedInteger priority, EventType eventType, CharacterString messageText, NotifyType notifyType, Boolean ackRequired, EventState fromState, EventState toState, NotificationParameters eventValues) {
         System.out.println("Listener: eventNotificationReceived / eventType " + eventType + " / messageText " + messageText);
     }
 
     @Override
-    public void textMessageReceived(ObjectIdentifier textMessageSourceDevice, Choice messageClass,
-                                    MessagePriority messagePriority, CharacterString message) {
+    public void textMessageReceived(ObjectIdentifier textMessageSourceDevice, Choice messageClass, MessagePriority messagePriority, CharacterString message) {
         System.out.println("Listener: textMessageReceived");
     }
 

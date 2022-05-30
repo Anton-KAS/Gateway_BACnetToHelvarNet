@@ -9,7 +9,6 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class BACnetLocalDeviceTest {
@@ -19,7 +18,6 @@ public class BACnetLocalDeviceTest {
     @BeforeEach
     public void init() {
         System.out.println("Start Test");
-        //localDevice = new BACnetLocalDevice();
     }
 
     @Test

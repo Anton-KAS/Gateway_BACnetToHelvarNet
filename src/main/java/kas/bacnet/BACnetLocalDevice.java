@@ -12,7 +12,6 @@ import com.serotonin.bacnet4j.type.primitive.UnsignedInteger;
 import org.json.simple.JSONObject;
 
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
 
 public class BACnetLocalDevice implements Runnable {
@@ -83,7 +82,7 @@ public class BACnetLocalDevice implements Runnable {
                         point.get("ROOM"),
                         point.get("ELECTRIC_GROUP"),
                         instanceNumber
-                        );
+                );
 
                 float presentValue = 0F; // TODO: Перед началом, добавить в JSON стартовые значения
 
