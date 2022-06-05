@@ -19,7 +19,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 public class ExcelParserTest {
     ExcelParser excel;
     String dirPath = "./src/test/resources/kas/excel/";
-    String fileName = "configPoints.xlsx";
+    String fileName = "TestConfigPoints.xlsx";
 
     @BeforeAll
     public static void started() {
@@ -43,12 +43,28 @@ public class ExcelParserTest {
     }
 
     @Test
+    public void testRealParseXlsxToJson() {
+        //arrange
+        String expected = parseExpectedJson();
+
+        //act
+        ExcelParser excelReal = new ExcelParser(dirPath, fileName);
+        String result = excelReal.parseXlsxToJson().toString();
+        System.out.println(result);
+
+        //assert
+        assertEquals(expected, result);
+    }
+
+
+    @Test
     public void testParseXlsxToJson() {
         //arrange
         String expected = parseExpectedJson();
 
         //act
         String result = excel.parseXlsxToJson().toString();
+        System.out.println(result);
 
         //assert
         assertEquals(expected, result);

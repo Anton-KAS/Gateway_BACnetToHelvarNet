@@ -37,8 +37,10 @@ public abstract class Point {
             currentValue = getValue().toString();
         } catch (BACnetServiceException e) {
             e.printStackTrace();
+        } finally {
+            return String.format("%s, %s, %s = %s, %s", instanceNumber, name, description, currentValue, units);
         }
-        return String.format("%s, %s, %s - %s, %s", instanceNumber, name, description, currentValue, units);
+
     }
 
     @Override

@@ -2,6 +2,7 @@ package kas.excel;
 
 public enum DefaultHeader {
     IP_CONTROLLER("IP Helvar controller:"),
+    PORT_CONTROLLER("IP port Helvar controller:"),
     LIGHT_PANEL("Light panel:"),
     HELVAR_GROUP("Helvar group number"),
     ROOM("Room number"),

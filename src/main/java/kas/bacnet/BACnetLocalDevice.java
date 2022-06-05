@@ -36,7 +36,7 @@ public class BACnetLocalDevice implements Runnable {
     private DeviceEventListener deviceEventListener;
     private Listener listener;
 
-    private Map<Integer, Point> pointMap = new HashMap<>();
+    private Map<String, Map<Integer, Point>> pointMap = new HashMap<>();
 
     public BACnetLocalDevice() {
         network = getNetwork();
@@ -74,8 +74,9 @@ public class BACnetLocalDevice implements Runnable {
             for (Object p : points.keySet()) {
                 String pKey = (String) p;
                 JSONObject point = (JSONObject) points.get(pKey);
-                long longInstanceNumber = (long) point.get("HELVAR_GROUP");
-                int instanceNumber = (int) longInstanceNumber;
+                //long longInstanceNumber = (long) point.get("HELVAR_GROUP");
+                //int instanceNumber = (int) longInstanceNumber;
+                int instanceNumber = (int) point.get("HELVAR_GROUP");
 
                 String description = String.format("%s / %s / %s / %s",
                         controller.get("LIGHT_PANEL"),
@@ -101,7 +102,7 @@ public class BACnetLocalDevice implements Runnable {
         boolean outOfService = false;
         EngineeringUnits units = EngineeringUnits.noUnits;
         AnalogInput ai = new AnalogInput(localDevice, instanceNumber, name, outOfService, units, description, presentValue);
-        pointMap.put(instanceNumber, ai.create());
+        putNewPointInMap("ai", instanceNumber, ai);
     }
 
     public void addAnalogValue(int instanceNumber, float presentValue, String description) {
@@ -109,7 +110,8 @@ public class BACnetLocalDevice implements Runnable {
         boolean outOfService = false;
         EngineeringUnits units = EngineeringUnits.noUnits;
         AnalogValue av = new AnalogValue(localDevice, instanceNumber, name, outOfService, units, description, presentValue);
-        pointMap.put(instanceNumber, av.create());
+        putNewPointInMap("av", instanceNumber, av);
+        //pointMap.put(instanceNumber, av.create());
     }
 
     public void addAnalogOutput(int instanceNumber, float presentValue, String description) {
@@ -117,14 +119,35 @@ public class BACnetLocalDevice implements Runnable {
         boolean outOfService = false;
         EngineeringUnits units = EngineeringUnits.noUnits;
         AnalogOutput ao = new AnalogOutput(localDevice, instanceNumber, name, outOfService, units, description, presentValue, presentValue);
-        pointMap.put(instanceNumber, ao.create());
+        putNewPointInMap("ao", instanceNumber, ao);
+    }
+
+    private void putNewPointInMap(String typeValue, int instanceNumber, Point point) {
+        Map<Integer, Point> pointMapByType = pointMap.get(typeValue);
+        if (pointMapByType == null) {
+            pointMapByType = new HashMap<>();
+        }
+        pointMapByType.put(instanceNumber, point.create());
+        pointMap.put(typeValue, pointMapByType);
+    }
+
+    public Map<String, Map<Integer, Point>> getPointMap() {
+        return pointMap;
     }
 
     @Override
     public void run() {
         try {
+            System.out.println("localDevice wait start");
+            Thread.sleep(30_000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        try {
+            System.out.println("localDevice run");
             localDevice.initialize();
         } catch (Exception e) {
+            System.out.println("localDevice stop");
             e.printStackTrace();
             localDevice.terminate();
         }

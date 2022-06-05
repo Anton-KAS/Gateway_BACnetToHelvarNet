@@ -31,7 +31,7 @@ public class Listener implements DeviceEventListener {
 
     @Override
     public void propertyWritten(Address from, BACnetObject obj, PropertyValue pv) {
-        BACnetReceivedObjectList.RECEIVED_OBJECT_LIST.addValueInTheEnd(from, obj, pv);
+        BACnetReceivedObjectList.BACNET_RECEIVED_OBJECT_LIST.addValueInTheEnd(from, obj, pv);
     }
 
     @Override

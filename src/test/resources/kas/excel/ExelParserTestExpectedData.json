@@ -1,5 +1,7 @@
 {
   "10.119.140.87": {
+    "PORT_CONTROLLER": 50000,
+    "STATUS": false,
     "Points": {
       "286": {
         "HELVAR_GROUP": 286,
@@ -24,6 +26,8 @@
     "LIGHT_PANEL": "ЩО-2.1"
   },
   "10.119.140.86": {
+    "PORT_CONTROLLER": 50000,
+    "STATUS": false,
     "Points": {
       "1": {
         "HELVAR_GROUP": 1,

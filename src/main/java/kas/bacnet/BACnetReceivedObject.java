@@ -13,11 +13,11 @@ public class BACnetReceivedObject {
         this.from = from;
         this.obj = obj;
         this.pv = pv;
-        System.out.println(this);
+        System.out.println(this); // TODO: DEL after test
     }
 
     @Override
     public String toString() {
-        return String.format("From: %s, %s, %s: %s", from.getMacAddress(), obj.getObjectName(), pv.getPropertyIdentifier(), pv.getValue());
+        return String.format("BACnet changes: from: %s, %s, %s: %s", from.getMacAddress(), obj.getObjectName(), pv.getPropertyIdentifier(), pv.getValue());
     }
 }

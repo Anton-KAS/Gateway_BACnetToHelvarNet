@@ -7,22 +7,22 @@ import com.serotonin.bacnet4j.type.constructed.PropertyValue;
 import java.util.LinkedList;
 
 public enum BACnetReceivedObjectList {
-    RECEIVED_OBJECT_LIST;
+    BACNET_RECEIVED_OBJECT_LIST;
 
     private final long start;
-    private LinkedList<BACnetReceivedObject> ObjectList;
+    private LinkedList<BACnetReceivedObject> objectList;
 
     BACnetReceivedObjectList() {
         this.start = System.currentTimeMillis();
-        this.ObjectList = new LinkedList<>();
+        this.objectList = new LinkedList<>();
     }
 
     public void addValueInTheEnd(Address from, BACnetObject obj, PropertyValue pv) {
-        ObjectList.addLast(new BACnetReceivedObject(from, obj, pv));
+        objectList.addLast(new BACnetReceivedObject(from, obj, pv));
     }
 
     public BACnetReceivedObject poolFirst() {
-        return ObjectList.pollFirst();
+        return objectList.pollFirst();
     }
 
     @Override

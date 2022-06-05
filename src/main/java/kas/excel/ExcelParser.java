@@ -1,6 +1,7 @@
 package kas.excel;
 
 import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.util.Iterator;
 import java.util.List;
 import java.util.regex.Pattern;
@@ -9,10 +10,11 @@ import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
-import org.json.JSONObject;
+//import org.json.JSONObject;
+import org.json.simple.JSONObject;
 
 public class ExcelParser {
-    private String dirPath = "../src/main/resources/kas/excel/";
+    private String dirPath = "./src/main/resources/kas/excel/";
     private String fileName = "configPoints.xlsx";
 
     public ExcelParser() {
@@ -25,7 +27,9 @@ public class ExcelParser {
 
     public JSONObject parseXlsxToJson() {
         try {
+            //String currentDir = System.getProperty("user.dir");
             File file = new File(dirPath + fileName);
+            System.out.println("FILE PATH " + file);
             FileInputStream fis = new FileInputStream(file);
             XSSFWorkbook wb = new XSSFWorkbook(fis);
 
@@ -34,10 +38,11 @@ public class ExcelParser {
             for (int i = 0; i < wb.getNumberOfSheets(); i++) {
                 XSSFSheet sheet = wb.getSheetAt(i);
                 if (sheet.getSheetName().equals(DefaultSheets.DESCRIPTION.toString()) |
-                        sheet.getSheetName().equals(DefaultSheets.PATTERN.toString())) {
+                        sheet.getSheetName().equals(DefaultSheets.PATTERN.toString()) |
+                        sheet.getSheetName().equals(DefaultSheets.SETTINGS.toString())) { // TODO: Добавить обработчик параметров
                     continue;
                 }
-                
+
                 JSONObject jsonController = new JSONObject();
                 JSONObject jsonPoints = new JSONObject();
 
@@ -54,7 +59,6 @@ public class ExcelParser {
                         int cellRowIndex = cell.getRowIndex();
                         switch (cell.getCellType()) {
 
-
                             case STRING:
                                 String cellValue = cell.getStringCellValue().trim();
 
@@ -62,10 +66,32 @@ public class ExcelParser {
                                     // Поиск IP Контроллера
                                     if (cellValue.equals(DefaultHeader.IP_CONTROLLER.getHeader())) {
                                         cell = cellIterator.next();
+
                                         String nextCellValue = cell.getStringCellValue();
                                         if (checkIP(nextCellValue)) {
                                             jsonController.put(DefaultHeader.IP_CONTROLLER.toString(), nextCellValue);
+
+                                            // Добавим поле со статусом контроллера (поумолчанию "Не в сети")
+                                            jsonController.put("STATUS", false);
                                             break;
+                                        }
+                                    }
+
+                                    // Поиск номера порта
+                                    if (cellValue.equals(DefaultHeader.PORT_CONTROLLER.getHeader())) {
+                                        cell = cellIterator.next();
+                                        switch (cell.getCellType()) {
+                                            case STRING:
+                                                String nextCellValue = cell.getStringCellValue();
+                                                if (nextCellValue != null && nextCellValue.length() > 0) {
+                                                    jsonController.put(DefaultHeader.PORT_CONTROLLER.toString(), Integer.parseInt(nextCellValue));
+                                                    break;
+                                                }
+                                            case NUMERIC:
+                                                double doubleValue = cell.getNumericCellValue();
+                                                jsonController.put(DefaultHeader.PORT_CONTROLLER.toString(),(int) doubleValue);
+                                                break;
+                                            default:
                                         }
                                     }
 
