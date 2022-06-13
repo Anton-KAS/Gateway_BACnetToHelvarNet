@@ -15,7 +15,6 @@ public class ReceivedObjectProcessor {
     private static final String C_RECALL_SCENE = "11";
     private static final String C_DIRECT_LEVEL = "13";
 
-
     public static void processing(String host, String receiveMessage, SetValueFromHelvarNet helvarPointsMap) {
         if (receiveMessage == null) {
             return;
@@ -25,7 +24,13 @@ public class ReceivedObjectProcessor {
             Map<String, String> parametersMap = new HashMap<>();
 
             String[] units = message.split(DELIMITER);
-            parametersMap.put("type", units[0].substring(0, 1));
+            if (units[0].contains(COMMAND)) {
+                parametersMap.put("type", units[0].substring(units[0].indexOf(COMMAND), units[0].indexOf(COMMAND) + 1));
+            } else if (units[0].contains(REPLY)) {
+                parametersMap.put("type", units[0].substring(units[0].indexOf(REPLY), units[0].indexOf(REPLY) + 1));
+            } else {
+                continue;
+            }
             for (String unit : units) {
                 if (unit.contains(ANSWER)) {
                     String[] answer = unit.split(ANSWER);

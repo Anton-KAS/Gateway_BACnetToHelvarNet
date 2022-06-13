@@ -41,7 +41,7 @@ public class Listener implements DeviceEventListener {
 
     @Override
     public void covNotificationReceived(UnsignedInteger subscriberProcessIdentifier, ObjectIdentifier initiatingDeviceIdentifier, ObjectIdentifier monitoredObjectIdentifier, UnsignedInteger timeRemaining, SequenceOf<PropertyValue> listOfValues) {
-        System.out.println("Listener: covNotificationReceived");
+        //System.out.println("Listener: covNotificationReceived");
     }
 
     @Override

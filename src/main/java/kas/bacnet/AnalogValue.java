@@ -36,7 +36,7 @@ public class AnalogValue extends Point {
             obj.writePropertyInternal(PropertyIdentifier.description, new CharacterString(description));
             obj.supportWritable();
         } catch (BACnetServiceException e) {
-            e.printStackTrace();
+            logger.error(e.toString());
         }
         return this;
     }

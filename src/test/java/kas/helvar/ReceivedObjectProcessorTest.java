@@ -1,8 +1,6 @@
 package kas.helvar;
 
-import org.json.simple.JSONObject;
 import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
@@ -25,7 +23,6 @@ public class ReceivedObjectProcessorTest {
         ArgumentCaptor<String> argCaptorValueType = ArgumentCaptor.forClass(String.class);
         ArgumentCaptor<Float> argCaptorValue = ArgumentCaptor.forClass(Float.class);
 
-
         //act
         processing(host, receiwedMessage, helvarPointsMap);
 
@@ -42,6 +39,7 @@ public class ReceivedObjectProcessorTest {
 
     private static Stream<Arguments> source() {
         return Stream.of(
+                Arguments.of("sdasdwsqadw>V:1,C:11,G:17,K:1,B:1,S:5,F:90#", "192.168.1.1", 17, "av", 5f, 1, true),
                 Arguments.of(">V:1,C:11,G:17,K:1,B:1,S:5,F:90#", "192.168.1.1", 17, "av", 5f, 1, true),
                 Arguments.of(">V:1,C:11,G:17,K:1,B:2,S:5,F:90#", "192.168.1.1", 0, null, 0f, 0, false),
                 Arguments.of(">V:1,C:12,B:7,S:4,F:1,@1.2.3.4#", "192.168.1.1", 0, null, 0f, 0, false),

@@ -1,42 +1,67 @@
 package kas.excel;
 
 import java.io.*;
-import java.nio.charset.StandardCharsets;
 import java.util.Iterator;
 import java.util.List;
+
+import org.apache.log4j.Logger;
+
+import java.util.Objects;
 import java.util.regex.Pattern;
 
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
-//import org.json.JSONObject;
 import org.json.simple.JSONObject;
 
 public class ExcelParser {
-    private String dirPath = "./src/main/resources/kas/excel/";
+    private final Logger logger;
+    private String dirPath;
     private String fileName = "configPoints.xlsx";
 
     public ExcelParser() {
+        this.logger = Logger.getLogger(ExcelParser.class);
     }
 
     public ExcelParser(String dirPath, String fileName) {
+        this.logger = Logger.getLogger(ExcelParser.class);
         this.dirPath = dirPath;
         this.fileName = fileName;
     }
 
     public JSONObject parseXlsxToJson() {
         try {
-            //String currentDir = System.getProperty("user.dir");
-            File file = new File(dirPath + fileName);
-            System.out.println("FILE PATH " + file);
-            FileInputStream fis = new FileInputStream(file);
-            XSSFWorkbook wb = new XSSFWorkbook(fis);
+            logger.info("Start parseXlsxToJson");
+
+            String filePath = dirPath + fileName;
+            File file = new File(filePath);
+            String filePath2 = System.getProperty("user.dir") + "\\" + fileName;
+            File file2 = new File(filePath2);
+
+            XSSFWorkbook wb;
+            logger.info("Excel file " + filePath + " exist: " + file.exists());
+            logger.info("Excel file " + filePath + " exist: " + file2.exists());
+            if (file.exists()) {
+                logger.info("Start parse excel file " + filePath);
+                FileInputStream inputStream = new FileInputStream(file);
+                wb = new XSSFWorkbook(inputStream);
+            } else if (file2.exists()) {
+                logger.info("Start parse excel file " + filePath2);
+                FileInputStream inputStream2 = new FileInputStream(file2);
+                wb = new XSSFWorkbook(inputStream2);
+            } else {
+                logger.info("Searching file in resources: " + fileName + " : " + fileName);
+                ClassLoader classLoader = getClass().getClassLoader();
+                InputStream inputStream3 = classLoader.getResourceAsStream(fileName);
+                wb = new XSSFWorkbook(inputStream3);
+            }
 
             JSONObject jsonData = new JSONObject();
 
             for (int i = 0; i < wb.getNumberOfSheets(); i++) {
                 XSSFSheet sheet = wb.getSheetAt(i);
+                System.out.println("1 - " + sheet.getSheetName());
                 if (sheet.getSheetName().equals(DefaultSheets.DESCRIPTION.toString()) |
                         sheet.getSheetName().equals(DefaultSheets.PATTERN.toString()) |
                         sheet.getSheetName().equals(DefaultSheets.SETTINGS.toString())) { // TODO: Добавить обработчик параметров
@@ -50,6 +75,7 @@ public class ExcelParser {
                 int headRowIndex = -1;
                 int[] headColIndexes = new int[mainHeaders.length];
                 for (Row row : sheet) {
+                    System.out.println("2 Row num - " + row.getRowNum());
                     JSONObject jsonPoint = new JSONObject();
 
                     Iterator<Cell> cellIterator = row.cellIterator();
@@ -57,6 +83,7 @@ public class ExcelParser {
                         Cell cell = cellIterator.next();
                         int cellColumnIndex = cell.getColumnIndex();
                         int cellRowIndex = cell.getRowIndex();
+                        System.out.println("3 Cell num - " + cellColumnIndex + "|" + cellRowIndex);
                         switch (cell.getCellType()) {
 
                             case STRING:
@@ -89,7 +116,7 @@ public class ExcelParser {
                                                 }
                                             case NUMERIC:
                                                 double doubleValue = cell.getNumericCellValue();
-                                                jsonController.put(DefaultHeader.PORT_CONTROLLER.toString(),(int) doubleValue);
+                                                jsonController.put(DefaultHeader.PORT_CONTROLLER.toString(), (int) doubleValue);
                                                 break;
                                             default:
                                         }
@@ -171,19 +198,21 @@ public class ExcelParser {
                         }
                     }
 
-                    if (headRowIndex != -1 && row.getRowNum() > headRowIndex) {
+                    if (headRowIndex != -1 && row.getRowNum() > headRowIndex && jsonPoint.get(DefaultHeader.HELVAR_GROUP.toString()) != null) {
                         jsonPoints.put(jsonPoint.get(DefaultHeader.HELVAR_GROUP.toString()).toString(), jsonPoint);
                     }
                 }
                 jsonController.put("Points", jsonPoints);
                 jsonData.put(jsonController.get(DefaultHeader.IP_CONTROLLER.toString()).toString(), jsonController);
             }
+            logger.info("END parseXlsxToJson");
             return jsonData;
 
         } catch (IOException e) {
-            e.printStackTrace();
+            logger.error(e.toString());
             return null;
         }
+
     }
 
     // TODO: Подумать, может выделить в отдельный класс

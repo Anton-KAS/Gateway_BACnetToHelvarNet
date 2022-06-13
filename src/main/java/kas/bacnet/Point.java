@@ -3,10 +3,14 @@ package kas.bacnet;
 import com.serotonin.bacnet4j.LocalDevice;
 import com.serotonin.bacnet4j.exception.BACnetServiceException;
 import com.serotonin.bacnet4j.type.enumerated.EngineeringUnits;
+import kas.excel.ExcelParser;
+import org.apache.log4j.Logger;
 
 import java.util.Objects;
 
 public abstract class Point {
+    protected final Logger logger;
+
     protected LocalDevice localDevice;
     protected int instanceNumber;
     protected String name;
@@ -16,6 +20,8 @@ public abstract class Point {
 
     public Point(LocalDevice localDevice, int instanceNumber, String name, boolean outOfService,
                  EngineeringUnits units, String description) {
+        this.logger = Logger.getLogger(ExcelParser.class);
+
         this.localDevice = localDevice;
         this.instanceNumber = instanceNumber;
         this.name = name;
@@ -38,9 +44,11 @@ public abstract class Point {
         } catch (BACnetServiceException e) {
             e.printStackTrace();
         } finally {
-            return String.format("%s, %s, %s = %s, %s", instanceNumber, name, description, currentValue, units);
+            if (currentValue == null) {
+                currentValue = "---";
+            }
         }
-
+        return String.format("%s, %s, %s = %s, %s", instanceNumber, name, description, currentValue, units);
     }
 
     @Override

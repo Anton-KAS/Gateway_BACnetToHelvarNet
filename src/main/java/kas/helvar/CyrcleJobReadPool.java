@@ -1,67 +1,49 @@
 package kas.helvar;
 
-import java.io.BufferedReader;
-import java.io.IOException;
+import kas.excel.ExcelParser;
+import org.apache.log4j.Logger;
+
 import java.util.Map;
 
 import static kas.helvar.HelvarPointsMap.HELVAR_POINTS_MAP;
-import static kas.helvar.HelvarReceivedObjectList.HELVAR_RECEIVED_OBJECT_LIST;
 
-public class CyrcleJobReadPool implements Runnable{
+public class CyrcleJobReadPool implements Runnable {
+    private final Logger logger;
+
     private final String host;
     private Map<Integer, HelvarPoint> pointsMap;
     private boolean running;
+    private final Listener listener;
 
-    public CyrcleJobReadPool(String host) {
+    public CyrcleJobReadPool(String host, Listener listener) {
+        this.logger = Logger.getLogger(ExcelParser.class);
+
+        this.listener = listener;
         this.host = host;
         this.pointsMap = HELVAR_POINTS_MAP.getPointsMapByHost(host);
+        logger.info("CyrcleJobReadPool HELVAR_POINTS_MAP pointsMap: " + pointsMap);
         this.running = false;
     }
 
     @Override
     public void run() {
-
-        long totalTime = 10;
-        long startTime;
-        long endTime;
-        long poolTime = 5; // in seconds
-
-        BufferedReader receivedObject = HELVAR_RECEIVED_OBJECT_LIST.poolFirst(host);
-        while (true) {
-            try {
-                System.out.println("Helvar CyrcleJobReadPool running");
-                running = true;
-                if (receivedObject == null) {
-                    if (totalTime < poolTime) {
-                        try {
-                            wait(poolTime - totalTime);
-                        } catch (InterruptedException e) {
-                            e.printStackTrace();
-                        }
-                    }
-                    startTime = System.nanoTime();
-                    for (HelvarPoint point : pointsMap.values()) {
-                        try {
-                            point.sendReadSceneValue();
-                            point.sendReadConsumption();
-                        } catch (Exception e) {
-                            System.out.println(e);
-                        }
-                    }
-                    endTime = System.nanoTime();
-                    totalTime = (endTime - startTime) / 1000000000;
-                } else {
-                    try {
-                        String receiverMessage = receivedObject.readLine();
-                        ReceivedObjectProcessor.processing(host, receiverMessage, HELVAR_POINTS_MAP);
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-                }
-            } catch (Exception e) {
-                System.out.println("Helvar CyrcleJobReadPool stopped");
-                running = false;
+        try {
+            running = true;
+            if (pointsMap == null) {
+                logger.info("CyrcleJobReadPool pointsMap == null - " + host);
             }
+            for (int n : pointsMap.keySet()) {
+                HelvarPoint point = pointsMap.get(n);
+                try {
+                    listener.setCycleSendMessage(point.getReadSceneQuery());
+                    listener.setCycleSendMessage(point.getReadConsumptionQuery());
+                } catch (Exception e) {
+                    logger.error("CyrcleJobReadPool run()" + e.toString());
+                }
+            }
+        } catch (Exception e) {
+            running = false;
+            logger.error("CyrcleJobReadPool run(): " + e.toString());
         }
     }
 }

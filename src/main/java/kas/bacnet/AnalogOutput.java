@@ -37,7 +37,7 @@ public class AnalogOutput extends Point {
             obj = new AnalogOutputObject(localDevice, instanceNumber, name, presentValue, units, outOfService, relinquishDefault);
             obj.writePropertyInternal(PropertyIdentifier.description, new CharacterString(description));
         } catch (BACnetServiceException e) {
-            e.printStackTrace();
+            logger.error(e.toString());
         }
         return this;
     }

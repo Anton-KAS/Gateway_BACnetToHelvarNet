@@ -3,8 +3,11 @@ package kas.helvar;
 import kas.excel.DefaultHeader;
 import org.json.simple.JSONObject;
 
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
+
+import static kas.helvar.ValuesToBacnet.VALUES_TO_BACNET;
 
 public enum HelvarPointsMap implements SetValueFromHelvarNet{
     HELVAR_POINTS_MAP;
@@ -15,7 +18,7 @@ public enum HelvarPointsMap implements SetValueFromHelvarNet{
         this.helvarPointsMap = new HashMap<>();
     }
 
-    public boolean addPointsFromJson(JSONObject json) {
+    public boolean addPointsFromJson(JSONObject json) throws IOException {
         if (json == null) return false;
         for (Object o : json.keySet()) {
             String keyIp = (String) o;
@@ -23,14 +26,26 @@ public enum HelvarPointsMap implements SetValueFromHelvarNet{
             String ipController = (String) controller.get(DefaultHeader.IP_CONTROLLER.toString());
             //long longPortController = (long) controller.get(DefaultHeader.PORT_CONTROLLER.toString());
             //int portController = (int) longPortController;
-            int portController = (int) controller.get(DefaultHeader.PORT_CONTROLLER.toString());
+            int portController;
+            try {
+                portController = (int) controller.get(DefaultHeader.PORT_CONTROLLER.toString());
+            } catch (ClassCastException cce) {
+                long longPortController = (long) controller.get(DefaultHeader.PORT_CONTROLLER.toString());
+                portController = (int) longPortController;
+            }
             JSONObject points = (JSONObject) controller.get("Points");
             for (Object p : points.keySet()) {
                 String pKey = (String) p;
                 JSONObject point = (JSONObject) points.get(pKey);
                 //long longInstanceNumber = (long) point.get("HELVAR_GROUP");
                 //int instanceNumber = (int) longInstanceNumber;
-                int instanceNumber = (int) point.get("HELVAR_GROUP");
+                int instanceNumber;
+                try {
+                    instanceNumber = (int) point.get("HELVAR_GROUP");
+                } catch (ClassCastException cce) {
+                    long longInstanceNumber = (long) point.get("HELVAR_GROUP");
+                    instanceNumber = (int) longInstanceNumber;
+                }
 
                 String description = String.format("Helvar point: %s / %s / %s / %s / %s",
                         keyIp,
@@ -40,7 +55,7 @@ public enum HelvarPointsMap implements SetValueFromHelvarNet{
                         instanceNumber
                 );
 
-                HelvarPoint helvarPoint = new HelvarPoint(instanceNumber, (boolean) point.get("DIMMING"), ipController, portController, description);
+                HelvarPoint helvarPoint = new HelvarPoint(ipController, instanceNumber, (boolean) point.get("DIMMING"), description);
 
                 Map<Integer, HelvarPoint> helvarPointMapByHost = helvarPointsMap.get(ipController);
                 if (helvarPointMapByHost == null) {
@@ -51,7 +66,6 @@ public enum HelvarPointsMap implements SetValueFromHelvarNet{
                 helvarPointsMap.put(ipController, helvarPointMapByHost);
             }
         }
-        System.out.println(helvarPointsMap);
         return true;
     }
 
@@ -61,6 +75,28 @@ public enum HelvarPointsMap implements SetValueFromHelvarNet{
 
     public Map<Integer, HelvarPoint> getPointsMapByHost(String host) {
         return helvarPointsMap.get(host);
+    }
+
+    public HelvarPoint getPointByGroup(int group) {
+        for (String host : helvarPointsMap.keySet()) {
+            Map<Integer, HelvarPoint> pointsMapByHost = getPointsMapByHost(host);
+            HelvarPoint helvarPoint = pointsMapByHost.get(group);
+            if (helvarPoint != null) {
+                return helvarPoint;
+            }
+        }
+        return null;
+    }
+
+    public String getHostByGroup(int group) {
+        for (String host : helvarPointsMap.keySet()) {
+            Map<Integer, HelvarPoint> pointsMapByHost = getPointsMapByHost(host);
+            HelvarPoint helvarPoint = pointsMapByHost.get(group);
+            if (helvarPoint != null) {
+                return host;
+            }
+        }
+        return null;
     }
 
     @Override
@@ -73,7 +109,7 @@ public enum HelvarPointsMap implements SetValueFromHelvarNet{
             return false;
         }
         HelvarPoint helvarPoint = helvarPointMapByHost.get(group);
-        helvarPoint.updateValue(type, value);
+        helvarPoint.updateValue(type, value, VALUES_TO_BACNET);
         return true;
     }
 }

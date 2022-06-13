@@ -42,19 +42,19 @@ public class ExcelParserTest {
         System.out.println("tests completed");
     }
 
-    @Test
-    public void testRealParseXlsxToJson() {
-        //arrange
-        String expected = parseExpectedJson();
-
-        //act
-        ExcelParser excelReal = new ExcelParser(dirPath, fileName);
-        String result = excelReal.parseXlsxToJson().toString();
-        System.out.println(result);
-
-        //assert
-        assertEquals(expected, result);
-    }
+//    @Test
+//    public void testRealParseXlsxToJson() {
+//        //arrange
+//        String expected = parseExpectedJson();
+//
+//        //act
+//        ExcelParser excelReal = new ExcelParser(dirPath, fileName);
+//        String result = excelReal.parseXlsxToJson().toString();
+//        System.out.println(result);
+//
+//        //assert
+//        assertEquals(expected, result);
+//    }
 
 
     @Test

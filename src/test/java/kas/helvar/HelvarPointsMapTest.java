@@ -1,6 +1,5 @@
 package kas.helvar;
 
-import kas.bacnet.BACnetLocalDevice;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
@@ -22,7 +21,7 @@ public class HelvarPointsMapTest {
     }
 
     @Test
-    public void testAddPointsFromJson() {
+    public void testAddPointsFromJson() throws IOException {
         //arrange
         JSONObject expected = parseExpectedJson();
         System.out.println("PRINT: 2 " + expected.toString());

@@ -9,12 +9,16 @@ import com.serotonin.bacnet4j.type.enumerated.EngineeringUnits;
 import com.serotonin.bacnet4j.type.enumerated.PropertyIdentifier;
 import com.serotonin.bacnet4j.type.primitive.CharacterString;
 import com.serotonin.bacnet4j.type.primitive.UnsignedInteger;
+import kas.excel.ExcelParser;
+import org.apache.log4j.Logger;
 import org.json.simple.JSONObject;
 
 import java.util.HashMap;
 import java.util.Map;
 
 public class BACnetLocalDevice implements Runnable {
+    private final Logger logger;
+
     private final String APPLICATION_SOFTWARE_VERSION = "0.0.1";
     private final int DEVICE_ID = 777;
     private final int VENDOR_ID = 13;
@@ -25,10 +29,11 @@ public class BACnetLocalDevice implements Runnable {
     private final String LOCATION = "BMS server";
     private final String DESCRIPTION = "Gateway Helvar.net to BACnet TCP/IP";
 
-    private final String BROADCAST_IP = "192.168.1.255";
-    private final String SUBNET_IP = "192.168.1.0";
-    private final String LOCAL_IP = "192.168.1.7";
+    private final String BROADCAST_IP = "10.119.140.255";
+    private final String SUBNET_IP = "10.119.140.0";
+    private final String LOCAL_IP = "10.119.140.101";
     private final int NETWORK_LENGTH = 24;
+    private final int PORT = 47808;
 
     private Network network;
     private DefaultTransport transport;
@@ -39,6 +44,8 @@ public class BACnetLocalDevice implements Runnable {
     private Map<String, Map<Integer, Point>> pointMap = new HashMap<>();
 
     public BACnetLocalDevice() {
+        this.logger = Logger.getLogger(ExcelParser.class);
+
         network = getNetwork();
         transport = new DefaultTransport(network);
         localDevice = getLocalDevice();
@@ -51,6 +58,7 @@ public class BACnetLocalDevice implements Runnable {
                 .withBroadcast(BROADCAST_IP, NETWORK_LENGTH)
                 .withSubnet(SUBNET_IP, NETWORK_LENGTH)
                 .withLocalBindAddress(LOCAL_IP)
+                .withPort(PORT)
                 .build();
     }
 
@@ -76,7 +84,14 @@ public class BACnetLocalDevice implements Runnable {
                 JSONObject point = (JSONObject) points.get(pKey);
                 //long longInstanceNumber = (long) point.get("HELVAR_GROUP");
                 //int instanceNumber = (int) longInstanceNumber;
-                int instanceNumber = (int) point.get("HELVAR_GROUP");
+                int instanceNumber;
+                try {
+                    instanceNumber = (int) point.get("HELVAR_GROUP");
+                } catch (ClassCastException cce) {
+                    long longInstanceNumber = (long) point.get("HELVAR_GROUP");
+                    instanceNumber = (int) longInstanceNumber;
+                }
+
 
                 String description = String.format("%s / %s / %s / %s",
                         controller.get("LIGHT_PANEL"),
@@ -138,17 +153,18 @@ public class BACnetLocalDevice implements Runnable {
     @Override
     public void run() {
         try {
-            System.out.println("localDevice wait start");
-            Thread.sleep(30_000);
+            int sec = 30;
+            logger.info("BACnet localDevice wait start " + sec + " sec");
+            Thread.sleep(sec * 1000);
         } catch (InterruptedException e) {
-            e.printStackTrace();
+            logger.error(e.toString());
         }
         try {
-            System.out.println("localDevice run");
+            logger.info("BACnet localDevice running");
             localDevice.initialize();
         } catch (Exception e) {
-            System.out.println("localDevice stop");
-            e.printStackTrace();
+            logger.info("BACnet localDevice stopped");
+            logger.error(e.toString());
             localDevice.terminate();
         }
     }

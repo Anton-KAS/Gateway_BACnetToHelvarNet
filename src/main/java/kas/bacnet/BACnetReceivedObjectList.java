@@ -18,11 +18,17 @@ public enum BACnetReceivedObjectList {
     }
 
     public void addValueInTheEnd(Address from, BACnetObject obj, PropertyValue pv) {
+        System.out.println("BACNET_RECEIVED_OBJECT_LIST ++++ ADD LAST");
         objectList.addLast(new BACnetReceivedObject(from, obj, pv));
     }
 
     public BACnetReceivedObject poolFirst() {
-        return objectList.pollFirst();
+        BACnetReceivedObject baCnetReceivedObject = objectList.pollFirst();
+        if (baCnetReceivedObject != null) {
+            System.out.println("BACNET_RECEIVED_OBJECT_LIST ---- POOL FIRST: " + baCnetReceivedObject);
+        }
+        return baCnetReceivedObject;
+
     }
 
     @Override
