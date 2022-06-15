@@ -91,5 +91,5 @@ jar {
 shadowJar {
     archiveBaseName.set('KASgateway_app')
     archiveClassifier.set('')
-    archiveVersion.set('0.0.3')
+    archiveVersion.set('0.0.4')
 }

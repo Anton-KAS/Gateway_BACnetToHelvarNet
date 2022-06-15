@@ -15,8 +15,9 @@ public class TempControl implements Runnable{
     @Override
     public void run() {
 
-        while (true) {
+        try {
             HELVAR_RECEIVED_OBJECT_LIST.sizeChanged();
-        }
+        } catch (Exception ignore) {}
+
     }
 }

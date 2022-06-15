@@ -17,7 +17,7 @@ public class Main {
     static final Logger logger = Logger.getLogger(Main.class);
 
     public static void main(String[] args) throws IOException {
-        logger.info("Start program");
+        logger.info("Main: Start program");
 
         ExcelParser excelParser = new ExcelParser();
         JSONObject jsonData = excelParser.parseXlsxToJson();
@@ -41,7 +41,8 @@ public class Main {
             int port = (int) controller.get("PORT_CONTROLLER");
 
             TempControl tempControl = new TempControl();
-            (new Thread(tempControl)).start();
+            //(new Thread(tempControl)).start();
+            scheduledExecutorService2.scheduleWithFixedDelay(tempControl, 0, 50, TimeUnit.MILLISECONDS);
 
             Socket socket;
             try {
@@ -52,10 +53,10 @@ public class Main {
                 logger.info("new Listener " + host + ":" + port);
                 (new Thread(listener)).start();
 
-                logger.info("new tempProcessing " + host);
-                TempProcessing tempProcessing = new TempProcessing(host);
-                //(new Thread(tempProcessing)).start();
-                scheduledExecutorService2.scheduleWithFixedDelay(tempProcessing, 0, 50, TimeUnit.MILLISECONDS);
+                logger.info("new valuesToBacnetProcessor " + host);
+                ValuesToBacnetProcessor valuesToBacnetProcessor = new ValuesToBacnetProcessor(host);
+                //(new Thread(valuesToBacnetProcessor)).start();
+                scheduledExecutorService2.scheduleWithFixedDelay(valuesToBacnetProcessor, 0, 50, TimeUnit.MILLISECONDS);
 
                 logger.info("new cyrcleJobReadPool " + host);
                 CyrcleJobReadPool cyrcleJobReadPool = new CyrcleJobReadPool(host, listener);
@@ -64,7 +65,7 @@ public class Main {
                 valuesFromBacnetProcessor.addListener(host, listener);
 
             } catch (IOException e) {
-                logger.error(e.toString());
+                logger.error("Main: " + e);
             }
         }
 
