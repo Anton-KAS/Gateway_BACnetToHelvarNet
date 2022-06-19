@@ -4,7 +4,7 @@ plugins {
 }
 
 group 'kas'
-version '0.0.1-SNAPSHOT'
+version '0.0.4-SNAPSHOT'
 
 repositories {
     mavenCentral()
@@ -26,6 +26,8 @@ dependencies {
     // https://mvnrepository.com/artifact/commons-codec/commons-codec
     implementation 'commons-codec:commons-codec:1.15'
 
+    // https://mvnrepository.com/artifact/org.apache.xmlbeans/xmlbeans
+    implementation 'org.apache.xmlbeans:xmlbeans:5.0.3'
 
     // https://mvnrepository.com/artifact/org.apache.poi/poi-ooxml-schemas
     //implementation 'org.apache.poi:poi-ooxml-schemas:4.1.2' - ломает
@@ -34,40 +36,37 @@ dependencies {
     // implementation 'org.apache.poi:ooxml-schemas:1.4' - ломает
 
     // https://mvnrepository.com/artifact/org.apache.poi/poi-ooxml-lite
-    implementation 'org.apache.poi:poi-ooxml-lite:5.2.2' // не ломает но не помог
+    // implementation 'org.apache.poi:poi-ooxml-lite:5.2.2' // не ломает но не помог
 
     // https://mvnrepository.com/artifact/org.apache.commons/commons-math3
-    implementation 'org.apache.commons:commons-math3:3.6.1' // не ломает но не помог
+    // implementation 'org.apache.commons:commons-math3:3.6.1' // не ломает но не помог
 
     // https://mvnrepository.com/artifact/javax.xml.stream/stax-api
-    implementation 'javax.xml.stream:stax-api:1.0-2' // не ломает но не помог
+    // implementation 'javax.xml.stream:stax-api:1.0-2' // не ломает но не помог
 
     // https://mvnrepository.com/artifact/commons-codec/commons-codec
-    implementation 'commons-codec:commons-codec:1.15' // не ломает но не помог
-
-    // https://mvnrepository.com/artifact/org.apache.xmlbeans/xmlbeans
-    implementation 'org.apache.xmlbeans:xmlbeans:5.0.3'
+    // implementation 'commons-codec:commons-codec:1.15' // не ломает но не помог
 
     // https://mvnrepository.com/artifact/org.json/json
-    implementation 'org.json:json:20220320'
+    //implementation 'org.json:json:20220320'
 
     // https://mvnrepository.com/artifact/com.googlecode.json-simple/json-simple
     implementation 'com.googlecode.json-simple:json-simple:1.1.1'
 
-//    // https://mvnrepository.com/artifact/com.googlecode.json-simple.wso2/json-simple
-//    implementation 'com.googlecode.json-simple.wso2:json-simple:1.1.wso2v1'
+    // https://mvnrepository.com/artifact/com.jayway.jsonpath/json-path
+    implementation 'com.jayway.jsonpath:json-path:2.7.0'
+
+    // https://mvnrepository.com/artifact/com.googlecode.json-simple.wso2/json-simple
+    //implementation 'com.googlecode.json-simple.wso2:json-simple:1.1.wso2v1'
 
     // https://mvnrepository.com/artifact/com.infiniteautomation/bacnet4j
     implementation 'com.infiniteautomation:bacnet4j:6.0.0'
-
-    // https://mvnrepository.com/artifact/com.jayway.jsonpath/json-path
-    implementation 'com.jayway.jsonpath:json-path:2.7.0'
 
     // https://mvnrepository.com/artifact/org.mockito/mockito-core
     testImplementation 'org.mockito:mockito-core:4.6.1'
 
     // https://mvnrepository.com/artifact/org.slf4j/slf4j-simple
-    testImplementation 'org.slf4j:slf4j-simple:2.0.0-alpha7'
+    //testImplementation 'org.slf4j:slf4j-simple:2.0.0-alpha7'
 
     // https://mvnrepository.com/artifact/org.apache.logging.log4j/log4j-core
     implementation 'org.apache.logging.log4j:log4j-to-slf4j:2.17.2'
@@ -83,7 +82,7 @@ test {
 
 jar {
     baseName("KASgateway")
-    version("0.0.0")
+    version("0.0.4")
     manifest{attributes "Main-Class": "Main"}
 }
 
