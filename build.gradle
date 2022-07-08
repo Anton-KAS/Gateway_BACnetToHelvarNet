@@ -4,7 +4,7 @@ plugins {
 }
 
 group 'kas'
-version '0.0.4-SNAPSHOT'
+version '0.1.1-SNAPSHOT'
 
 repositories {
     mavenCentral()
@@ -28,12 +28,6 @@ dependencies {
 
     // https://mvnrepository.com/artifact/org.apache.xmlbeans/xmlbeans
     implementation 'org.apache.xmlbeans:xmlbeans:5.0.3'
-
-    // https://mvnrepository.com/artifact/org.apache.poi/poi-ooxml-schemas
-    //implementation 'org.apache.poi:poi-ooxml-schemas:4.1.2' - ломает
-
-    // https://mvnrepository.com/artifact/org.apache.poi/ooxml-schemas
-    // implementation 'org.apache.poi:ooxml-schemas:1.4' - ломает
 
     // https://mvnrepository.com/artifact/org.apache.poi/poi-ooxml-lite
     // implementation 'org.apache.poi:poi-ooxml-lite:5.2.2' // не ломает но не помог
@@ -82,7 +76,7 @@ test {
 
 jar {
     baseName("KASgateway")
-    version("0.0.4")
+    version("0.1.1")
     manifest{attributes "Main-Class": "Main"}
 }
 
@@ -90,5 +84,5 @@ jar {
 shadowJar {
     archiveBaseName.set('KASgateway_app')
     archiveClassifier.set('')
-    archiveVersion.set('0.0.4')
+    archiveVersion.set('0.1.1')
 }

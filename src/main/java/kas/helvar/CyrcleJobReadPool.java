@@ -11,39 +11,38 @@ public class CyrcleJobReadPool implements Runnable {
     private final Logger logger;
 
     private final String host;
-    private Map<Integer, HelvarPoint> pointsMap;
-    private boolean running;
-    private final Listener listener;
+    private final Map<Integer, HelvarPoint> pointsMap;
+    private volatile HelvarControllerListener listener;
 
-    public CyrcleJobReadPool(String host, Listener listener) {
+    public CyrcleJobReadPool(String host, HelvarControllerListener listener) {
         this.logger = Logger.getLogger(ExcelParser.class);
 
         this.listener = listener;
         this.host = host;
         this.pointsMap = HELVAR_POINTS_MAP.getPointsMapByHost(host);
         logger.info("CyrcleJobReadPool HELVAR_POINTS_MAP pointsMap: " + pointsMap);
-        this.running = false;
     }
 
     @Override
     public void run() {
         try {
-            running = true;
             if (pointsMap == null) {
                 logger.info("CyrcleJobReadPool pointsMap == null - " + host);
             }
+            assert pointsMap != null;
             for (int n : pointsMap.keySet()) {
-                HelvarPoint point = pointsMap.get(n);
-                try {
-                    listener.setCycleSendMessage(point.getReadSceneQuery());
-                    listener.setCycleSendMessage(point.getReadConsumptionQuery());
-                } catch (Exception e) {
-                    logger.error("CyrcleJobReadPool run()" + e.toString());
+                synchronized (this) {
+                    HelvarPoint point = pointsMap.get(n);
+                    try {
+                        listener.setCycleSendMessage(point.getReadSceneQuery());
+                        listener.setCycleSendMessage(point.getReadConsumptionQuery());
+                    } catch (Exception e) {
+                        logger.error("CyrcleJobReadPool run()" + e);
+                    }
                 }
             }
         } catch (Exception e) {
-            running = false;
-            logger.error("CyrcleJobReadPool run(): " + e.toString());
+            logger.error("CyrcleJobReadPool run(): " + e);
         }
     }
 }

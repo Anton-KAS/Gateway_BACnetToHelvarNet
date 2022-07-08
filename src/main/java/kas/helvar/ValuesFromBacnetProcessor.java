@@ -1,84 +1,72 @@
 package kas.helvar;
 
-import kas.bacnet.BACnetReceivedObject;
-import kas.excel.ExcelParser;
+import kas.bacnet.BacnetReceivedObject;
+import kas.bacnet.BacnetReceivedObjectList;
 import org.apache.log4j.Logger;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Objects;
+import java.util.concurrent.ConcurrentHashMap;
 
-import static kas.bacnet.BACnetReceivedObjectList.BACNET_RECEIVED_OBJECT_LIST;
+//import static kas.bacnet.BacnetReceivedObjectList.BACNET_RECEIVED_OBJECT_LIST;
 import static kas.helvar.HelvarPointsMap.HELVAR_POINTS_MAP;
 
 public class ValuesFromBacnetProcessor implements Runnable {
     private final Logger logger;
 
-    private boolean running;
-    private Map<String, Listener> listenerMap;
+    private volatile Map<String, HelvarControllerListener> listenerMap;
+    private volatile BacnetReceivedObjectList bacnetReceivedObjectList;
 
-    public ValuesFromBacnetProcessor() {
-        this.logger = Logger.getLogger(ExcelParser.class);
+    public ValuesFromBacnetProcessor(BacnetReceivedObjectList bacnetReceivedObjectList) {
+        this.logger = Logger.getLogger(ValuesFromBacnetProcessor.class);
 
-        this.running = false;
-        listenerMap = new HashMap<>();
+        this.bacnetReceivedObjectList = bacnetReceivedObjectList;
+        listenerMap = new ConcurrentHashMap<>();
     }
 
-    public void addListener(String host, Listener listener) {
+    private @Nullable String queryProcessor(@NotNull BacnetReceivedObject bacnetReceivedObject, @NotNull HelvarPoint helvarPoint) {
+        String type = bacnetReceivedObject.getType();
+        int value = bacnetReceivedObject.getValue();
+        String query;
+        switch (type) {
+            case "av":
+                query = helvarPoint.getRecallSceneQuery(value);
+                break;
+            case "ao":
+                query = helvarPoint.getDirectLevelQuery(value);
+                break;
+            default:
+                query = null;
+        }
+        return query;
+    }
+    public void addListener(String host, HelvarControllerListener listener) {
         listenerMap.put(host, listener);
     }
 
     @Override
     public void run() {
-        //logger.info("ValuesFromBacnetProcessor run()");
-        running = true;
-        //while (running) {
-        try {
-            BACnetReceivedObject bacnetReceivedObject = BACNET_RECEIVED_OBJECT_LIST.poolFirst();
-            if (bacnetReceivedObject == null) {
-                return;
-                //continue;
-            }
-            System.out.println("ValuesFromBacnetProcessor get bacnetReceivedObject");
-            int group = bacnetReceivedObject.getObjectId();
-            System.out.println("ValuesFromBacnetProcessor get group: " + group);
-            HelvarPoint helvarPoint = HELVAR_POINTS_MAP.getPointByGroup(group);
-            System.out.println("ValuesFromBacnetProcessor get helvarPoint: " + helvarPoint);
-            if (helvarPoint == null) {
-                return;
-                //continue;
-            }
-            ;
-            String type = bacnetReceivedObject.getType();
-            System.out.println("ValuesFromBacnetProcessor get type: " + type);
-            int value = bacnetReceivedObject.getValue();
-            System.out.println("ValuesFromBacnetProcessor get value: " + value);
-            String query = null;
-            switch (type) {
-                case "av":
-                    System.out.println("ValuesFromBacnetProcessor switch av");
-                    query = helvarPoint.getRecallSceneQuery(value);
-                    break;
-                case "ao":
-                    System.out.println("ValuesFromBacnetProcessor switch ao");
-                    query = helvarPoint.getDirectLevelQuery(value);
-                    break;
-            }
-            System.out.println("ValuesFromBacnetProcessor get query: " + query);
-            if (query != null) {
-                Listener listener = listenerMap.get(helvarPoint.getHost());
-                System.out.println("ValuesFromBacnetProcessor get listener");
-                listener.setBacnetSendMessage(query);
-                System.out.println("ValuesFromBacnetProcessor listener setBacnetSendMessage");
-            }
-        } catch (Exception e) {
-            logger.error("ValuesFromBacnetProcessor run() - " + e.toString());
-        }
-        //}
-    }
+        while (true) {
+            try {
+                //BacnetReceivedObject bacnetReceivedObject = BACNET_RECEIVED_OBJECT_LIST.getFirst();
+                BacnetReceivedObject bacnetReceivedObject = bacnetReceivedObjectList.getFirst();
 
-    public void stop() {
-        running = false;
-        logger.info("ValuesFromBacnetProcessor stop()");
+                int group = bacnetReceivedObject.getObjectId();
+                HelvarPoint helvarPoint = HELVAR_POINTS_MAP.getPointByGroup(group);
+
+                String query = null;
+                if (helvarPoint != null) {
+                    query = queryProcessor(bacnetReceivedObject, helvarPoint);
+                }
+                if (query != null) {
+                    HelvarControllerListener listener = listenerMap.get(helvarPoint.getHost());
+                    listener.setBacnetSendMessage(query);
+                }
+            } catch (Exception e) {
+                logger.error("ValuesFromBacnetProcessor run() - " + e);
+            }
+        }
     }
 }

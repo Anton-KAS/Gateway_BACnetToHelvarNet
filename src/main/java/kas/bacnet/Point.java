@@ -3,7 +3,6 @@ package kas.bacnet;
 import com.serotonin.bacnet4j.LocalDevice;
 import com.serotonin.bacnet4j.exception.BACnetServiceException;
 import com.serotonin.bacnet4j.type.enumerated.EngineeringUnits;
-import kas.excel.ExcelParser;
 import org.apache.log4j.Logger;
 
 import java.util.Objects;
@@ -20,7 +19,7 @@ public abstract class Point {
 
     public Point(LocalDevice localDevice, int instanceNumber, String name, boolean outOfService,
                  EngineeringUnits units, String description) {
-        this.logger = Logger.getLogger(ExcelParser.class);
+        this.logger = Logger.getLogger(Point.class);
 
         this.localDevice = localDevice;
         this.instanceNumber = instanceNumber;

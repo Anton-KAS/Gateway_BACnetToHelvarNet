@@ -22,12 +22,12 @@ public class AnalogOutput extends Point {
     }
 
     @Override
-    public Object getValue() throws BACnetServiceException {
+    public synchronized Object getValue() throws BACnetServiceException {
         return obj.readProperty(PropertyIdentifier.presentValue);
     }
 
     @Override
-    public void setValue(Object value) {
+    public synchronized void setValue(Object value) {
         obj.writePropertyInternal(PropertyIdentifier.presentValue, new Real((Float) value));
     }
 

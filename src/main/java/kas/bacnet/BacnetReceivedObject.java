@@ -4,26 +4,17 @@ import com.serotonin.bacnet4j.obj.BACnetObject;
 import com.serotonin.bacnet4j.type.Encodable;
 import com.serotonin.bacnet4j.type.constructed.Address;
 import com.serotonin.bacnet4j.type.constructed.PropertyValue;
-import com.serotonin.bacnet4j.type.primitive.Real;
-import jflex.Main;
-import kas.excel.ExcelParser;
-import org.apache.log4j.Logger;
 
-public class BACnetReceivedObject {
-    private final Logger logger;
-
+public class BacnetReceivedObject {
     private final Address from;
     private final BACnetObject obj;
     private final PropertyValue pv;
 
-    public BACnetReceivedObject(Address from, BACnetObject obj, PropertyValue pv) {
-        this.logger = Logger.getLogger(ExcelParser.class);
-
+    public BacnetReceivedObject(Address from, BACnetObject obj, PropertyValue pv) {
         this.from = from;
         this.obj = obj;
         this.pv = pv;
-
-        logger.info(this.toString());
+        System.out.println("NEW BRO: " + from + " | " + obj + " | " + pv);
     }
 
     public int getObjectId() {
@@ -48,6 +39,6 @@ public class BACnetReceivedObject {
 
     @Override
     public String toString() {
-        return String.format("BACnet changes: from: %s, %s, %s: %s", from.getMacAddress(), obj.getObjectName(), pv.getPropertyIdentifier(), pv.getValue());
+        return String.format("BacnetReceivedObject: from: %s, %s, %s: %s", from.getMacAddress(), obj.getObjectName(), pv.getPropertyIdentifier(), pv.getValue());
     }
 }

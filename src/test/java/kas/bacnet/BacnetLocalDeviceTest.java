@@ -8,11 +8,13 @@ import org.junit.jupiter.api.*;
 import java.io.FileReader;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.util.Properties;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-public class BACnetLocalDeviceTest {
-    BACnetLocalDevice localDevice = new BACnetLocalDevice();
+public class BacnetLocalDeviceTest {
+    Properties bacnetConfig = new ConfigLoader().getConfig();
+    BacnetLocalDevice localDevice = new BacnetLocalDevice(bacnetConfig);
     String dirPath = "./src/test/resources/kas/excel/";
 
     @BeforeEach
@@ -24,7 +26,8 @@ public class BACnetLocalDeviceTest {
     public void testAddPointsFromJson() {
         //arrange
         JSONObject expected = parseExpectedJson();
-        System.out.println("PRINT: 2 " + expected.toString());
+        assert expected != null;
+
         //act
         boolean result = localDevice.addPointsFromJson(expected);
 

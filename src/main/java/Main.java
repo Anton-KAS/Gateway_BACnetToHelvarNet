@@ -1,4 +1,7 @@
-import kas.bacnet.BACnetLocalDevice;
+import com.serotonin.bacnet4j.LocalDevice;
+import com.serotonin.bacnet4j.exception.BACnetErrorException;
+import kas.bacnet.BacnetLocalDevice;
+import kas.bacnet.ConfigLoader;
 import kas.excel.ExcelParser;
 import kas.helvar.*;
 import org.apache.log4j.Logger;
@@ -6,6 +9,8 @@ import org.json.simple.JSONObject;
 
 import java.io.IOException;
 import java.net.Socket;
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -15,73 +20,80 @@ import static kas.helvar.ValuesToBacnet.VALUES_TO_BACNET;
 
 public class Main {
     static final Logger logger = Logger.getLogger(Main.class);
+    static Map<Runnable, Thread> threadList;
 
-    public static void main(String[] args) throws IOException {
+    public static void main(String[] args) throws InterruptedException, BACnetErrorException {
         logger.info("Main: Start program");
 
         ExcelParser excelParser = new ExcelParser();
-        JSONObject jsonData = excelParser.parseXlsxToJson();
+        JSONObject jsonConfigData = excelParser.parseXlsxToJson();
 
-        HELVAR_POINTS_MAP.addPointsFromJson(jsonData);
+        HELVAR_POINTS_MAP.addPointsFromJson(jsonConfigData);
 
-        ScheduledExecutorService scheduledExecutorService;
-        scheduledExecutorService = Executors.newScheduledThreadPool(1);
+        BacnetLocalDevice bacnetDevice = new BacnetLocalDevice(new ConfigLoader().getConfig());
+        logger.info("Created BACnet bacnetDevice");
 
-        ScheduledExecutorService scheduledExecutorService2;
-        scheduledExecutorService2 = Executors.newScheduledThreadPool(1);
+        bacnetDevice.addPointsFromJson(jsonConfigData);
+        logger.info("BACnet addPointsFromJson");
 
-        ValuesFromBacnetProcessor valuesFromBacnetProcessor = new ValuesFromBacnetProcessor();
+        VALUES_TO_BACNET.setBacnetPointList(bacnetDevice);
+        logger.info("BACnet setBacnetPointList");
 
-        for (Object o : jsonData.keySet()) {
-            logger.info("startCyrcleJobs loop by jsonData: " + o.toString());
+        threadList = new ConcurrentHashMap<>();
+
+        Thread bacnetDeviceThread = new Thread(bacnetDevice);
+        bacnetDeviceThread.setName("BACnet service");
+        bacnetDeviceThread.setPriority(Thread.MAX_PRIORITY);
+        threadList.put(bacnetDevice, bacnetDeviceThread);
+
+        ValuesFromBacnetProcessor valuesFromBacnetProcessor = new ValuesFromBacnetProcessor(bacnetDevice.getBacnetReceivedObjectList());
+        Thread valuesFromBacnetProcessorThread = new Thread(valuesFromBacnetProcessor);
+        valuesFromBacnetProcessorThread.setPriority(Thread.MAX_PRIORITY);
+        valuesFromBacnetProcessorThread.setName("valuesFromBacnetProcessor");
+        threadList.put(valuesFromBacnetProcessor, valuesFromBacnetProcessorThread);
+
+        Set<Object> objects = jsonConfigData.keySet();
+        objects.parallelStream().forEach((o) -> {
+            ScheduledExecutorService scheduledExecutorService = Executors.newScheduledThreadPool(1);
+
+            logger.info("startCyrcleJobs loop by jsonConfigData: " + o.toString());
             String key = (String) o;
-            JSONObject controller = (JSONObject) jsonData.get(key);
+            JSONObject controller = (JSONObject) jsonConfigData.get(key);
 
             String host = (String) controller.get("IP_CONTROLLER");
             int port = (int) controller.get("PORT_CONTROLLER");
 
-            TempControl tempControl = new TempControl();
-            //(new Thread(tempControl)).start();
-            scheduledExecutorService2.scheduleWithFixedDelay(tempControl, 0, 50, TimeUnit.MILLISECONDS);
-
-            Socket socket;
             try {
-                socket = new Socket(host, port);
+                Socket socket = new Socket(host, port);
                 logger.info("new Socket " + host + ":" + port);
 
-                Listener listener = new Listener(host, port, socket);
-                logger.info("new Listener " + host + ":" + port);
-                (new Thread(listener)).start();
+                logger.info("new Helvar Controller Listener " + host + ":" + port);
+                HelvarControllerListener helvarControllerlistener = new HelvarControllerListener(host, port, socket);
+                Thread helvarControllerListenerThread = new Thread(helvarControllerlistener);
+                helvarControllerListenerThread.setName("helvarControllerListenerThread " + host);
+                threadList.put(helvarControllerlistener, helvarControllerListenerThread);
+                helvarControllerListenerThread.start();
 
                 logger.info("new valuesToBacnetProcessor " + host);
                 ValuesToBacnetProcessor valuesToBacnetProcessor = new ValuesToBacnetProcessor(host);
-                //(new Thread(valuesToBacnetProcessor)).start();
-                scheduledExecutorService2.scheduleWithFixedDelay(valuesToBacnetProcessor, 0, 50, TimeUnit.MILLISECONDS);
+                Thread valuesToBacnetProcessorThread = new Thread(valuesToBacnetProcessor);
+                valuesToBacnetProcessorThread.setName("valuesToBacnetProcessor " + host);
+                threadList.put(valuesToBacnetProcessor, valuesToBacnetProcessorThread);
+                valuesToBacnetProcessorThread.start();
 
                 logger.info("new cyrcleJobReadPool " + host);
-                CyrcleJobReadPool cyrcleJobReadPool = new CyrcleJobReadPool(host, listener);
+                CyrcleJobReadPool cyrcleJobReadPool = new CyrcleJobReadPool(host, helvarControllerlistener);
                 scheduledExecutorService.scheduleWithFixedDelay(cyrcleJobReadPool, 0, 5, TimeUnit.SECONDS);
 
-                valuesFromBacnetProcessor.addListener(host, listener);
+                valuesFromBacnetProcessor.addListener(host, helvarControllerlistener);
 
             } catch (IOException e) {
                 logger.error("Main: " + e);
             }
-        }
+        });
 
-        BACnetLocalDevice localDevice = new BACnetLocalDevice();
-        logger.info("Created BACnet localDevice");
+        valuesFromBacnetProcessorThread.start();
+        bacnetDeviceThread.start();
 
-        localDevice.addPointsFromJson(jsonData);
-        logger.info("BACnet addPointsFromJson");
-
-        VALUES_TO_BACNET.setBacnetPointList(localDevice);
-        logger.info("BACnet setBacnetPointList");
-
-
-        scheduledExecutorService2.scheduleWithFixedDelay(valuesFromBacnetProcessor, 0, 50, TimeUnit.MILLISECONDS);
-        //(new Thread(valuesFromBacnetProcessor)).start();
-
-        (new Thread(localDevice)).start();
     }
 }

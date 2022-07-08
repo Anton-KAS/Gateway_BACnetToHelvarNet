@@ -1,72 +1,41 @@
 package kas.helvar;
 
-import kas.excel.ExcelParser;
-import org.apache.log4j.Logger;
-
-import java.io.BufferedReader;
-import java.io.IOException;
 import java.util.HashMap;
-import java.util.LinkedList;
 import java.util.Map;
+import java.util.concurrent.LinkedBlockingDeque;
 
 import static kas.helvar.HelvarPointsMap.HELVAR_POINTS_MAP;
 
 public enum HelvarReceivedObjectList {
     HELVAR_RECEIVED_OBJECT_LIST;
 
-    private final Logger logger;
-
-    private final long start;
-    private final Map<String, LinkedList<String>> objectMap;
-    private int currentSize;
+    private final Map<String, LinkedBlockingDeque<String>> objectMap;
 
     HelvarReceivedObjectList() {
-        this.logger = Logger.getLogger(ExcelParser.class);
-        this.start = System.currentTimeMillis();
         this.objectMap = new HashMap<>();
     }
 
-    public void addValueInTheEnd(String host, String in) throws IOException {
-        //logger.info("HELVAR_RECEIVED_OBJECT_LIST addValueInTheEnd: " + host + " | DATA: " + in);
-        LinkedList<String> objectList = objectMap.get(host);
+    public void addValueToTheEnd(String host, String in) {
+        LinkedBlockingDeque<String> objectList = objectMap.get(host);
         if (objectList == null) {
-            objectList = new LinkedList<>();
+            objectList = new LinkedBlockingDeque<>();
         }
-        objectList.addLast(in);
+        objectList.add(in);
         objectMap.put(host, objectList);
     }
 
-    public String poolFirst(String host) {
-        LinkedList<String> objectList = objectMap.get(host);
+    public String poolFirst(String host) throws InterruptedException {
+        LinkedBlockingDeque<String> objectList = objectMap.get(host);
         if (objectList == null) {
             return null;
         }
-        String message = objectList.pollFirst();
-//        if (message != null) {
-//            //logger.info("HELVAR_RECEIVED_OBJECT_LIST poolFirst " + host);
-//        }
-        return message;
+        return objectList.takeFirst();
     }
 
-    public void sizeChanged() {
-        int newSize = objectMap.size();
-        if (newSize != currentSize) {
-            //logger.info("HELVAR_RECEIVED_OBJECT_LIST: size changed from " + currentSize + " to " + newSize);
-            currentSize = newSize;
-        }
-    }
-
-    public void processing(String host) {
+    public void processing(String host) throws InterruptedException {
         String receivedObject = HELVAR_RECEIVED_OBJECT_LIST.poolFirst(host);
         if (receivedObject != null) {
-            //logger.info("HELVAR_RECEIVED_OBJECT_LIST: processing() get message from Helvar " + host);
             ReceivedObjectProcessor.processing(host, receivedObject, HELVAR_POINTS_MAP);
         }
     }
-
-    @Override
-    public String toString() {
-        return "Создан в " + start;
-    }
 }
-

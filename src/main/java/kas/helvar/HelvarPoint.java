@@ -33,7 +33,7 @@ public class HelvarPoint {
         int fade_time = dimming ? 200 : 0;
 
         this.M_FADE_TIME = String.format("F:%s", fade_time);
-        System.out.println(this);
+        //System.out.println(this);
     }
 
     public String getHost() { return host; }
@@ -84,7 +84,7 @@ public class HelvarPoint {
         return String.format("%s,%s,%s,%s,%s%s", M_START, command, M_GROUP, direct_level, M_FADE_TIME, M_TERMINATOR);
     }
 
-    public void updateValue(String type, float value, SettableValueToBacnet VALUES_TO_BACNET) {
+    public synchronized void updateValue(String type, float value, SettableValueToBacnet VALUES_TO_BACNET) {
         switch (type) {
             case "av":
                 this.sceneValue = value;

@@ -1,6 +1,5 @@
 package kas.helvar;
 
-import kas.excel.ExcelParser;
 import org.apache.log4j.Logger;
 
 import java.io.*;
@@ -10,11 +9,10 @@ import java.nio.charset.StandardCharsets;
 import java.util.LinkedList;
 import java.util.Objects;
 
-public class Listener implements Runnable {
+public class HelvarControllerListener implements Runnable {
     private final Logger logger;
     private final String host;
     private final int port;
-    private boolean running;
     private final Socket socket;
     private final int SOCKET_TIMEOUT;
     private BufferedReader fromRouter;
@@ -22,19 +20,14 @@ public class Listener implements Runnable {
     private final LinkedList<String> sendMessage;
     private final int MAX_SEND_MESSAGE_LENGTH;
 
-    public Listener(String host, int port, final Socket socket) {
-        this.logger = Logger.getLogger(ExcelParser.class);
+    public HelvarControllerListener(String host, int port, final Socket socket) {
+        this.logger = Logger.getLogger(HelvarControllerListener.class);
         this.host = host;
         this.port = port;
-        this.running = false;
         this.socket = socket;
         this.SOCKET_TIMEOUT = 500;
         this.sendMessage = new LinkedList<>();
         this.MAX_SEND_MESSAGE_LENGTH = 300;
-    }
-
-    public boolean getRunning() {
-        return running;
     }
 
     private void listen() throws IOException {
@@ -48,16 +41,17 @@ public class Listener implements Runnable {
                 String stringValue = String.valueOf(charValue);
                 if ((stringValue).equals("#") & sb.length() > 300) break;
             }
-        } catch (SocketTimeoutException ignored) {
+        } catch (SocketTimeoutException e) {
+            //logger.error(e);
         }
         String resp = sb.toString();
         if (resp.length() > 0) {
             logger.info(String.format("Listener RECEIVED from Helvar.net %s:%s : value <--- %s", host, port, resp));
-            HelvarReceivedObjectList.HELVAR_RECEIVED_OBJECT_LIST.addValueInTheEnd(host, sb.toString());
+            HelvarReceivedObjectList.HELVAR_RECEIVED_OBJECT_LIST.addValueToTheEnd(host, sb.toString());
         }
     }
 
-    private void send() throws IOException {
+    private synchronized void send() throws IOException {
         String toSend = sendMessage.pollFirst();
         if (toSend != null) {
             logger.info(String.format("Listener SEND to Helvar.net %s:%s : value ---> %s", host, port, toSend));
@@ -68,20 +62,19 @@ public class Listener implements Runnable {
         }
     }
 
-    public void setCycleSendMessage(String message) {
+    public synchronized void setCycleSendMessage(String message) {
         if (sendMessage.size() > MAX_SEND_MESSAGE_LENGTH) {
             return;
         }
         sendMessage.addLast(message);
     }
 
-    public void setBacnetSendMessage(String message) {
+    public synchronized void setBacnetSendMessage(String message) {
         sendMessage.addFirst(message);
     }
 
     @Override
     public void run() {
-        running = true;
         try {
             logger.info("Helvar Listener " + host + ":" + port + " - running");
 
@@ -89,26 +82,21 @@ public class Listener implements Runnable {
             toRouter = new DataOutputStream(socket.getOutputStream());
             socket.setSoTimeout(SOCKET_TIMEOUT);
 
-            while (running) {
+            while (true) {
                 send();
                 listen();
             }
         } catch (IOException e) {
-            running = false;
-            logger.error("Listener run() - " + e.toString());
+            logger.error("Listener run() - " + e);
         }
-    }
-
-    public void stop() {
-        running = false;
     }
 
     @Override
     public boolean equals(Object obj) {
         if (this == obj) return true;
-        if (obj == null || !obj.getClass().equals(Listener.class)) return false;
+        if (obj == null || !obj.getClass().equals(HelvarControllerListener.class)) return false;
 
-        Listener altObject = (Listener) obj;
+        HelvarControllerListener altObject = (HelvarControllerListener) obj;
 
         return Objects.equals(host, altObject.host);
     }

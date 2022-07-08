@@ -6,7 +6,6 @@ import java.util.List;
 
 import org.apache.log4j.Logger;
 
-import java.util.Objects;
 import java.util.regex.Pattern;
 
 import org.apache.poi.ss.usermodel.Cell;
@@ -61,7 +60,7 @@ public class ExcelParser {
 
             for (int i = 0; i < wb.getNumberOfSheets(); i++) {
                 XSSFSheet sheet = wb.getSheetAt(i);
-                System.out.println("1 - " + sheet.getSheetName());
+                //System.out.println("1 - " + sheet.getSheetName());
                 if (sheet.getSheetName().equals(DefaultSheets.DESCRIPTION.toString()) |
                         sheet.getSheetName().equals(DefaultSheets.PATTERN.toString()) |
                         sheet.getSheetName().equals(DefaultSheets.SETTINGS.toString())) { // TODO: Добавить обработчик параметров
@@ -75,7 +74,7 @@ public class ExcelParser {
                 int headRowIndex = -1;
                 int[] headColIndexes = new int[mainHeaders.length];
                 for (Row row : sheet) {
-                    System.out.println("2 Row num - " + row.getRowNum());
+                    //System.out.println("2 Row num - " + row.getRowNum());
                     JSONObject jsonPoint = new JSONObject();
 
                     Iterator<Cell> cellIterator = row.cellIterator();
@@ -83,7 +82,7 @@ public class ExcelParser {
                         Cell cell = cellIterator.next();
                         int cellColumnIndex = cell.getColumnIndex();
                         int cellRowIndex = cell.getRowIndex();
-                        System.out.println("3 Cell num - " + cellColumnIndex + "|" + cellRowIndex);
+                        //System.out.println("3 Cell num - " + cellColumnIndex + "|" + cellRowIndex);
                         switch (cell.getCellType()) {
 
                             case STRING:
