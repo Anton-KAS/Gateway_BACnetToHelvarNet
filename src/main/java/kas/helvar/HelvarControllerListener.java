@@ -25,7 +25,7 @@ public class HelvarControllerListener implements Runnable {
         this.host = host;
         this.port = port;
         this.socket = socket;
-        this.SOCKET_TIMEOUT = 500;
+        this.SOCKET_TIMEOUT = 250;
         this.sendMessage = new LinkedList<>();
         this.MAX_SEND_MESSAGE_LENGTH = 300;
     }
@@ -54,11 +54,12 @@ public class HelvarControllerListener implements Runnable {
     private synchronized void send() throws IOException {
         String toSend = sendMessage.pollFirst();
         if (toSend != null) {
-            logger.info(String.format("Listener SEND to Helvar.net %s:%s : value ---> %s", host, port, toSend));
+            logger.info(String.format("Listener    SEND   to Helvar.net %s:%s : value ---> %s", host, port, toSend));
             byte[] dataInBytes = toSend.getBytes(StandardCharsets.UTF_8);
             toRouter.writeInt(toSend.length());
             toRouter.write(dataInBytes, 0, toSend.length());
             toRouter.flush();
+            HelvarReceivedObjectList.HELVAR_RECEIVED_OBJECT_LIST.addValueToTheEnd(host, toSend);
         }
     }
 
@@ -83,8 +84,12 @@ public class HelvarControllerListener implements Runnable {
             socket.setSoTimeout(SOCKET_TIMEOUT);
 
             while (true) {
-                send();
-                listen();
+                try {
+                    send();
+                    listen();
+                } catch (Exception e) {
+                    logger.error("run() " + e.getMessage());
+                }
             }
         } catch (IOException e) {
             logger.error("Listener run() - " + e);

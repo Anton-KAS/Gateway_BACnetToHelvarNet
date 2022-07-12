@@ -91,7 +91,9 @@ public enum HelvarPointsMap implements SetValueFromHelvarNet {
             return false;
         }
         HelvarPoint helvarPoint = helvarPointMapByHost.get(group);
-        helvarPoint.updateValue(type, value, VALUES_TO_BACNET);
+        if (helvarPoint != null) {
+            helvarPoint.updateValue(type, value, VALUES_TO_BACNET);
+        }
         return true;
     }
 }

@@ -123,7 +123,9 @@ public class HelvarPointTest {
 
         //act
         HelvarPoint helvarPoint = new HelvarPoint(null, group, false, "");
-        helvarPoint.updateValue(type, value, valuesToBacnetMock);
+        if (helvarPoint != null) {
+            helvarPoint.updateValue(type, value, valuesToBacnetMock);
+        }
 
         //assert
         Mockito.verify(valuesToBacnetMock, Mockito.times(1)).setValue(type, group, value);

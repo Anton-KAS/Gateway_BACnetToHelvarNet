@@ -87,18 +87,24 @@ public class HelvarPoint {
     public synchronized void updateValue(String type, float value, SettableValueToBacnet VALUES_TO_BACNET) {
         switch (type) {
             case "av":
-                this.sceneValue = value;
-                VALUES_TO_BACNET.setValue("av", group, value);
+                if (sceneValue != value) {
+                    this.sceneValue = value;
+                    VALUES_TO_BACNET.setValue("av", group, value);
+                }
                 break;
 
             case "ai":
-                this.consumptionValue = value;
-                VALUES_TO_BACNET.setValue("ai", group, value);
+                if (consumptionValue != value) {
+                    this.consumptionValue = value;
+                    VALUES_TO_BACNET.setValue("ai", group, value);
+                }
                 break;
 
             case "ao":
-                this.directLevelValue = value;
-                VALUES_TO_BACNET.setValue("ao", group, value);
+                if (directLevelValue != value) {
+                    this.directLevelValue = value;
+                    VALUES_TO_BACNET.setValue("ao", group, value);
+                }
                 break;
         }
     }

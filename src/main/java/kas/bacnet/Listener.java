@@ -16,6 +16,7 @@ import com.serotonin.bacnet4j.type.primitive.Boolean;
 import com.serotonin.bacnet4j.type.primitive.CharacterString;
 import com.serotonin.bacnet4j.type.primitive.ObjectIdentifier;
 import com.serotonin.bacnet4j.type.primitive.UnsignedInteger;
+import org.apache.log4j.Logger;
 
 import java.util.HashMap;
 import java.util.List;
@@ -24,12 +25,15 @@ import java.util.Map;
 import static kas.bacnet.BacnetReceivedObjectList.BACNET_RECEIVED_OBJECT_LIST;
 
 public class Listener implements DeviceEventListener {
+    private final Logger logger;
     List<RemoteDevice> remoteDevices;
     LocalDevice localDevice;
 
     Map<Integer, BACnetDevice> waitingRoomBacnetDevices = new HashMap<>();
 
     public Listener(LocalDevice localDevice, List<RemoteDevice> remoteDevices) {
+        this.logger = Logger.getLogger(BacnetLocalDevice.class);
+
         this.remoteDevices = remoteDevices;
         this.localDevice = localDevice;
     }
@@ -57,6 +61,7 @@ public class Listener implements DeviceEventListener {
     public void propertyWritten(Address from, BACnetObject obj, PropertyValue pv) {
         System.out.println(pv);
         //BacnetReceivedObjectList.BACNET_RECEIVED_OBJECT_LIST.addValueInTheEnd(from, obj, pv);
+        logger.info("From BACnet: " + pv);
         BACNET_RECEIVED_OBJECT_LIST.addValueInTheEnd(from, obj, pv);
     }
 

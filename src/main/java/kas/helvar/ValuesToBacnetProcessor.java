@@ -2,6 +2,7 @@ package kas.helvar;
 
 import org.apache.log4j.Logger;
 
+import java.util.Arrays;
 import java.util.Objects;
 
 import static kas.helvar.HelvarReceivedObjectList.HELVAR_RECEIVED_OBJECT_LIST;
@@ -38,7 +39,8 @@ public class ValuesToBacnetProcessor implements Runnable {
             try {
                 HELVAR_RECEIVED_OBJECT_LIST.processing(host);
             } catch (Exception e) {
-                this.logger.error("ValuesToBacnetProcessor: " + e);
+                this.logger.error("ValuesToBacnetProcessor: " + e.getMessage());
+                this.logger.error("ValuesToBacnetProcessor: " + Arrays.toString(e.getStackTrace()));
             }
         }
     }

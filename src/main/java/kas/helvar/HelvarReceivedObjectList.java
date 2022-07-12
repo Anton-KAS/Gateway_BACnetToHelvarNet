@@ -1,5 +1,6 @@
 package kas.helvar;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.LinkedBlockingDeque;
@@ -19,9 +20,9 @@ public enum HelvarReceivedObjectList {
         LinkedBlockingDeque<String> objectList = objectMap.get(host);
         if (objectList == null) {
             objectList = new LinkedBlockingDeque<>();
+            objectMap.put(host, objectList);
         }
         objectList.add(in);
-        objectMap.put(host, objectList);
     }
 
     public String poolFirst(String host) throws InterruptedException {
