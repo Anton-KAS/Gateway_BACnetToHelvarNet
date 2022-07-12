@@ -52,7 +52,7 @@ public enum HelvarPointsMap implements SetValueFromHelvarNet {
                         instanceNumber
                 );
 
-                HelvarPoint helvarPoint = new HelvarPoint(ipController, instanceNumber, (boolean) point.get("DIMMING"), description);
+                HelvarPoint helvarPoint = new HelvarPoint(ipController, instanceNumber, (boolean) point.get("DIMMING"), (int) point.get("FADE_TIME"), description);
 
                 Map<Integer, HelvarPoint> helvarPointMapByHost = helvarPointsMap.get(ipController);
                 if (helvarPointMapByHost == null) {

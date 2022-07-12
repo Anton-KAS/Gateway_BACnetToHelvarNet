@@ -20,7 +20,7 @@ public class HelvarPointTest {
         //arrange
 
         //act
-        HelvarPoint helvarPoint = new HelvarPoint(null, group, false, "");
+        HelvarPoint helvarPoint = new HelvarPoint(null, group, false, 0, "");
         String result = helvarPoint.getReadSceneQuery();
 
         //assert
@@ -42,7 +42,7 @@ public class HelvarPointTest {
         //arrange
 
         //act
-        HelvarPoint helvarPoint = new HelvarPoint(null, group, dimming, "");
+        HelvarPoint helvarPoint = new HelvarPoint(null, group, dimming, 200, "");
         String result = helvarPoint.getReadConsumptionQuery();
 
         //assert
@@ -61,9 +61,9 @@ public class HelvarPointTest {
 
     @ParameterizedTest
     @MethodSource("sourceRecallScene")
-    public void testGetRecallSceneQuery(int group, boolean dimming, int sceneNum, String expected) {
+    public void testGetRecallSceneQuery(int group, boolean dimming, int fadeTime, int sceneNum, String expected) {
         //act
-        HelvarPoint helvarPoint = new HelvarPoint(null, group, dimming, "");
+        HelvarPoint helvarPoint = new HelvarPoint(null, group, dimming, fadeTime, "");
         String result = helvarPoint.getRecallSceneQuery(sceneNum);
 
         //assert
@@ -72,24 +72,26 @@ public class HelvarPointTest {
 
     private static Stream<Arguments> sourceRecallScene() {
         return Stream.of(
-                Arguments.of(1, true, -1, ">V:1,C:11,G:1,K:1,B:1,S:1,F:200#"),
-                Arguments.of(1, true, 0, ">V:1,C:11,G:1,K:1,B:1,S:1,F:200#"),
-                Arguments.of(1, true, 1, ">V:1,C:11,G:1,K:1,B:1,S:1,F:200#"),
-                Arguments.of(1, false, 2, ">V:1,C:11,G:1,K:1,B:1,S:2,F:0#"),
-                Arguments.of(12, true, 15, ">V:1,C:11,G:12,K:1,B:1,S:15,F:200#"),
-                Arguments.of(12, false, 15, ">V:1,C:11,G:12,K:1,B:1,S:15,F:0#"),
-                Arguments.of(123, true, 16, ">V:1,C:11,G:123,K:1,B:1,S:16,F:200#"),
-                Arguments.of(123, false, 16, ">V:1,C:11,G:123,K:1,B:1,S:16,F:0#"),
-                Arguments.of(1234, false, 17, ">V:1,C:11,G:1234,K:1,B:1,S:16,F:0#"),
-                Arguments.of(1234, false, 100, ">V:1,C:11,G:1234,K:1,B:1,S:16,F:0#")
+                Arguments.of(1, true, 200, -1, ">V:1,C:11,G:1,K:1,B:1,S:1,F:200#"),
+                Arguments.of(1, true, 200, 0, ">V:1,C:11,G:1,K:1,B:1,S:1,F:200#"),
+                Arguments.of(1, true, 200, 1, ">V:1,C:11,G:1,K:1,B:1,S:1,F:200#"),
+                Arguments.of(1, false, 0, 2, ">V:1,C:11,G:1,K:1,B:1,S:2,F:0#"),
+                Arguments.of(12, true, 200, 15, ">V:1,C:11,G:12,K:1,B:1,S:15,F:200#"),
+                Arguments.of(12, false, 0, 15, ">V:1,C:11,G:12,K:1,B:1,S:15,F:0#"),
+                Arguments.of(123, true, 200, 16, ">V:1,C:11,G:123,K:1,B:1,S:16,F:200#"),
+                Arguments.of(123, false, 0, 16, ">V:1,C:11,G:123,K:1,B:1,S:16,F:0#"),
+                Arguments.of(1234, false, 0, 17, ">V:1,C:11,G:1234,K:1,B:1,S:16,F:0#"),
+                Arguments.of(1234, false, 200, 17, ">V:1,C:11,G:1234,K:1,B:1,S:16,F:200#"),
+                Arguments.of(1234, false, 100, 17, ">V:1,C:11,G:1234,K:1,B:1,S:16,F:100#"),
+                Arguments.of(1234, false, 0, 100, ">V:1,C:11,G:1234,K:1,B:1,S:16,F:0#")
         );
     }
 
     @ParameterizedTest
     @MethodSource("sourceDirectLevel")
-    public void testGetDirectLevelQuery(int group, boolean dimming, int directLevelInt, String expected) {
+    public void testGetDirectLevelQuery(int group, boolean dimming, int fadeTime, int directLevelInt, String expected) {
         //act
-        HelvarPoint helvarPoint = new HelvarPoint(null, group, dimming, "");
+        HelvarPoint helvarPoint = new HelvarPoint(null, group, dimming, fadeTime, "");
         String result = helvarPoint.getDirectLevelQuery(directLevelInt);
 
         //assert
@@ -98,16 +100,17 @@ public class HelvarPointTest {
 
     private static Stream<Arguments> sourceDirectLevel() {
         return Stream.of(
-                Arguments.of(1, true, -1, ">V:1,C:13,G:1,L:0,F:200#"),
-                Arguments.of(1, true, 0, ">V:1,C:13,G:1,L:0,F:200#"),
-                Arguments.of(1, true, 1, ">V:1,C:13,G:1,L:1,F:200#"),
-                Arguments.of(1, false, 2, ">V:1,C:13,G:1,L:2,F:0#"),
-                Arguments.of(12, true, 50, ">V:1,C:13,G:12,L:50,F:200#"),
-                Arguments.of(12, false, 50, ">V:1,C:13,G:12,L:50,F:0#"),
-                Arguments.of(123, true, 100, ">V:1,C:13,G:123,L:100,F:200#"),
-                Arguments.of(123, false, 100, ">V:1,C:13,G:123,L:100,F:0#"),
-                Arguments.of(1234, false, 101, ">V:1,C:13,G:1234,L:100,F:0#"),
-                Arguments.of(1234, false, 1000, ">V:1,C:13,G:1234,L:100,F:0#")
+                Arguments.of(1, true, 200, -1, ">V:1,C:13,G:1,L:0,F:200#"),
+                Arguments.of(1, true, 200, 0, ">V:1,C:13,G:1,L:0,F:200#"),
+                Arguments.of(1, true, 200, 1, ">V:1,C:13,G:1,L:1,F:200#"),
+                Arguments.of(1, false, 0, 2, ">V:1,C:13,G:1,L:2,F:0#"),
+                Arguments.of(12, true, 200, 50, ">V:1,C:13,G:12,L:50,F:200#"),
+                Arguments.of(12, false, 0, 50, ">V:1,C:13,G:12,L:50,F:0#"),
+                Arguments.of(123, true, 200, 100, ">V:1,C:13,G:123,L:100,F:200#"),
+                Arguments.of(123, false, 0, 100, ">V:1,C:13,G:123,L:100,F:0#"),
+                Arguments.of(1234, false, 0, 101, ">V:1,C:13,G:1234,L:100,F:0#"),
+                Arguments.of(1234, false, 100, 101, ">V:1,C:13,G:1234,L:100,F:100#"),
+                Arguments.of(1234, false, 0, 1000, ">V:1,C:13,G:1234,L:100,F:0#")
         );
     }
 
@@ -122,10 +125,9 @@ public class HelvarPointTest {
         ArgumentCaptor<Float> argCaptorValue = ArgumentCaptor.forClass(Float.class);
 
         //act
-        HelvarPoint helvarPoint = new HelvarPoint(null, group, false, "");
-        if (helvarPoint != null) {
-            helvarPoint.updateValue(type, value, valuesToBacnetMock);
-        }
+        HelvarPoint helvarPoint = new HelvarPoint(null, group, false, 0, "");
+        helvarPoint.updateValue(type, value, valuesToBacnetMock);
+
 
         //assert
         Mockito.verify(valuesToBacnetMock, Mockito.times(1)).setValue(type, group, value);

@@ -130,6 +130,24 @@ public class ExcelParser {
                                             break;
                                         }
                                     }
+
+                                    // Поиск номера регистра для состояния контроллера
+                                    if (cellValue.equals(DefaultHeader.CONTROLLER_REGISTER.getHeader())) {
+                                        cell = cellIterator.next();
+                                        switch (cell.getCellType()) {
+                                            case STRING:
+                                                String nextCellValue = cell.getStringCellValue();
+                                                if (nextCellValue != null && nextCellValue.length() > 0) {
+                                                    jsonController.put(DefaultHeader.CONTROLLER_REGISTER.toString(), Integer.parseInt(nextCellValue));
+                                                    break;
+                                                }
+                                            case NUMERIC:
+                                                double doubleValue = cell.getNumericCellValue();
+                                                jsonController.put(DefaultHeader.CONTROLLER_REGISTER.toString(), (int) doubleValue);
+                                                break;
+                                            default:
+                                        }
+                                    }
                                 }
 
                                 // Поиск номера столбца с Helvar группой
@@ -152,7 +170,11 @@ public class ExcelParser {
                                     headColIndexes[3] = cellColumnIndex;
                                     if (headRowIndex == -1) headRowIndex = cellRowIndex;
                                 }
-
+                                // Поиск номера столбца с диммированием
+                                if (cellValue.equals(DefaultHeader.FADE_TIME.getHeader())) {
+                                    headColIndexes[4] = cellColumnIndex;
+                                    if (headRowIndex == -1) headRowIndex = cellRowIndex;
+                                }
                                 // Поисх данных по точкам
                                 if (headRowIndex != -1 && cellRowIndex > headRowIndex) {
                                     if (headColIndexes[0] == cellColumnIndex) {
@@ -168,6 +190,10 @@ public class ExcelParser {
                                     if (headColIndexes[3] == cellColumnIndex) {
                                         Boolean boolValue = Boolean.parseBoolean(cellValue);
                                         jsonPoint.put(DefaultHeader.DIMMING.toString(), boolValue);
+                                    }
+                                    if (headColIndexes[4] == cellColumnIndex) {
+                                        int intValue = Integer.parseInt(cellValue);
+                                        jsonPoint.put(DefaultHeader.FADE_TIME.toString(), intValue);
                                     }
                                 }
 
@@ -190,6 +216,10 @@ public class ExcelParser {
                                     if (headColIndexes[3] == cellColumnIndex) {
                                         Boolean boolValue = Boolean.parseBoolean(stringValue);
                                         jsonPoint.put(DefaultHeader.DIMMING.toString(), boolValue);
+                                    }
+                                    if (headColIndexes[4] == cell.getColumnIndex()) {
+                                        int intValue = (int) doubleValue;
+                                        jsonPoint.put(DefaultHeader.FADE_TIME.toString(), intValue);
                                     }
                                 }
                                 break;

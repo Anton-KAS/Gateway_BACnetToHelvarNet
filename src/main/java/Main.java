@@ -22,7 +22,7 @@ public class Main {
     static final Logger logger = Logger.getLogger(Main.class);
     static Map<Runnable, Thread> threadList;
 
-    public static void main(String[] args) throws InterruptedException, BACnetErrorException {
+    public static void main(String[] args) {
         logger.info("Main: Start program");
 
         ExcelParser excelParser = new ExcelParser();
@@ -52,9 +52,10 @@ public class Main {
         valuesFromBacnetProcessorThread.setName("valuesFromBacnetProcessor");
         threadList.put(valuesFromBacnetProcessor, valuesFromBacnetProcessorThread);
 
+
         Set<Object> objects = jsonConfigData.keySet();
         objects.parallelStream().forEach((o) -> {
-            ScheduledExecutorService scheduledExecutorService = Executors.newScheduledThreadPool(1);
+            //ScheduledExecutorService scheduledExecutorService = Executors.newScheduledThreadPool(1);
 
             logger.info("startCyrcleJobs loop by jsonConfigData: " + o.toString());
             String key = (String) o;
@@ -62,13 +63,14 @@ public class Main {
 
             String host = (String) controller.get("IP_CONTROLLER");
             int port = (int) controller.get("PORT_CONTROLLER");
+            int controllerReg = (int) controller.get("CONTROLLER_REGISTER");
 
             try {
                 Socket socket = new Socket(host, port);
                 logger.info("new Socket " + host + ":" + port);
 
                 logger.info("new Helvar Controller Listener " + host + ":" + port);
-                HelvarControllerListener helvarControllerlistener = new HelvarControllerListener(host, port, socket);
+                HelvarControllerListener helvarControllerlistener = new HelvarControllerListener(host, port, socket, controllerReg);
                 Thread helvarControllerListenerThread = new Thread(helvarControllerlistener);
                 helvarControllerListenerThread.setName("helvarControllerListenerThread " + host);
                 threadList.put(helvarControllerlistener, helvarControllerListenerThread);
@@ -83,7 +85,10 @@ public class Main {
 
                 logger.info("new cyrcleJobReadPool " + host);
                 CyrcleJobReadPool cyrcleJobReadPool = new CyrcleJobReadPool(host, helvarControllerlistener);
-                scheduledExecutorService.scheduleWithFixedDelay(cyrcleJobReadPool, 0, 5, TimeUnit.SECONDS);
+                Thread cyrcleJobReadPoolThread = new Thread(cyrcleJobReadPool);
+                cyrcleJobReadPoolThread.setName("cyrcleJobReadPool " + host);
+                cyrcleJobReadPoolThread.start();
+                //scheduledExecutorService.scheduleWithFixedDelay(cyrcleJobReadPool, 0, 5, TimeUnit.SECONDS);
 
                 valuesFromBacnetProcessor.addListener(host, helvarControllerlistener);
 
@@ -92,8 +97,26 @@ public class Main {
             }
         });
 
+        //Thread.sleep(5000);
         valuesFromBacnetProcessorThread.start();
         bacnetDeviceThread.start();
 
+        /*
+        while (true) {
+            if (bacnetDevice.isRunning()) {
+                try {
+                    Thread.sleep(500);
+                    bacnetDevice.sendWhoIsRequestMessage();
+                    Thread.sleep(1000);
+                } catch (Exception e) {
+                    logger.error(e.getMessage());
+                    logger.error(e.getStackTrace());
+                }
+            } else {
+                Thread.sleep(1000);
+            }
+        }
+
+         */
     }
 }

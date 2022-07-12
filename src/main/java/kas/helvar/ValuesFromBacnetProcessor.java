@@ -6,6 +6,7 @@ import org.apache.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -62,10 +63,16 @@ public class ValuesFromBacnetProcessor implements Runnable {
                 }
                 if (query != null) {
                     HelvarControllerListener listener = listenerMap.get(helvarPoint.getHost());
-                    listener.setBacnetSendMessage(query);
+                    if (listener != null) {
+                        listener.setBacnetSendMessage(query);
+                    } else {
+                        logger.error("Skip send message: " + query + "\tto: " + helvarPoint.getHost());
+                    }
                 }
             } catch (Exception e) {
-                logger.error("ValuesFromBacnetProcessor run() - " + e);
+                logger.error("run() - " + e);
+                logger.error("run() - " + e.getMessage());
+                logger.error("run() - " + Arrays.toString(e.getStackTrace()));
             }
         }
     }

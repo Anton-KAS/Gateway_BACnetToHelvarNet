@@ -3,21 +3,19 @@ package kas.bacnet;
 import com.serotonin.bacnet4j.LocalDevice;
 import com.serotonin.bacnet4j.RemoteDevice;
 import com.serotonin.bacnet4j.apdu.UnconfirmedRequest;
-import com.serotonin.bacnet4j.exception.BACnetErrorException;
 import com.serotonin.bacnet4j.exception.BACnetException;
 import com.serotonin.bacnet4j.npdu.ip.IpNetwork;
 import com.serotonin.bacnet4j.npdu.ip.IpNetworkBuilder;
 import com.serotonin.bacnet4j.service.unconfirmed.UnconfirmedRequestService;
+import com.serotonin.bacnet4j.service.unconfirmed.WhoIsRequest;
 import com.serotonin.bacnet4j.transport.DefaultTransport;
 import com.serotonin.bacnet4j.type.constructed.Address;
-import com.serotonin.bacnet4j.type.constructed.BDTEntry;
 import com.serotonin.bacnet4j.type.enumerated.EngineeringUnits;
 import com.serotonin.bacnet4j.type.enumerated.PropertyIdentifier;
 import com.serotonin.bacnet4j.type.enumerated.Segmentation;
 import com.serotonin.bacnet4j.type.primitive.CharacterString;
 import com.serotonin.bacnet4j.type.primitive.OctetString;
 import com.serotonin.bacnet4j.type.primitive.UnsignedInteger;
-import com.serotonin.bacnet4j.util.sero.ByteQueue;
 import org.apache.log4j.Logger;
 import org.json.simple.JSONObject;
 
@@ -42,7 +40,7 @@ public class BacnetLocalDevice implements Runnable {
     private final String broadcastIp;
     private final String localIp;
     private final int networkLength;
-    private final int port;
+    private final int localPort;
 
     private final DefaultTransport transport;
     private final LocalDevice localDevice;
@@ -59,6 +57,8 @@ public class BacnetLocalDevice implements Runnable {
     private String bbmdIp = "0.0.0.0";
     private int bbmdPort = 0;
 
+    private volatile boolean running;
+
     public BacnetLocalDevice(Properties BacnetConfig) {
         this.logger = Logger.getLogger(BacnetLocalDevice.class);
 
@@ -67,7 +67,7 @@ public class BacnetLocalDevice implements Runnable {
         this.broadcastIp = BacnetConfig.getProperty("ip.broadcast");
         this.localIp = BacnetConfig.getProperty("ip.local");
         this.networkLength = Integer.parseInt(BacnetConfig.getProperty("network.length"));
-        this.port = Integer.parseInt(BacnetConfig.getProperty("network.port"));
+        this.localPort = Integer.parseInt(BacnetConfig.getProperty("network.port"));
 
         this.objectName = MODEL_NAME + deviceId;
         this.description = VENDOR_ID + " " + VENDOR_NAME + " Gateway Helvar.net to BACnet TCP/IP " + APPLICATION_SOFTWARE_VERSION;
@@ -91,7 +91,8 @@ public class BacnetLocalDevice implements Runnable {
 
         this.remoteDevices = new ArrayList<>();
 
-        this.localDevice.getEventHandler().addListener(new Listener(localDevice, remoteDevices));
+        this.localDevice.getEventHandler().addListener(new Listener(localDevice, remoteDevices, this));
+        this.running = false;
     }
 
     public BacnetReceivedObjectList getBacnetReceivedObjectList() {
@@ -103,7 +104,7 @@ public class BacnetLocalDevice implements Runnable {
                 .withBroadcast(broadcastIp, networkLength)
                 //.withSubnet(subnetIp, networkLength)
                 .withLocalBindAddress(localIp)
-                .withPort(port)
+                .withPort(localPort)
                 .withReuseAddress(true)
                 .build();
     }
@@ -126,11 +127,16 @@ public class BacnetLocalDevice implements Runnable {
         for (Object o : json.keySet()) {
             String key = (String) o;
             JSONObject controller = (JSONObject) json.get(key);
+
+            int controllerReg = (int) controller.get("CONTROLLER_REGISTER");
+            addBinaryInput(controllerReg, "offline", "Helvar Controller Status " + controller.get("IP_CONTROLLER") + " | " + controller.get("LIGHT_PANEL"));
+
             JSONObject points = (JSONObject) controller.get("Points");
             for (Object p : points.keySet()) {
                 String pKey = (String) p;
                 JSONObject point = (JSONObject) points.get(pKey);
                 int instanceNumber;
+
                 try {
                     instanceNumber = (int) point.get("HELVAR_GROUP");
                 } catch (ClassCastException cce) {
@@ -173,6 +179,12 @@ public class BacnetLocalDevice implements Runnable {
         putNewPointInMap("ao", instanceNumber, ao);
     }
 
+    public void addBinaryInput(int instanceNumber, String presentValue, String description) {
+        String name = String.format("Controller status %s", instanceNumber);
+        BinaryInput bi = new BinaryInput(localDevice, instanceNumber, name, false, EngineeringUnits.noUnits, description, presentValue);
+        putNewPointInMap("bi", instanceNumber, bi);
+    }
+
     private void putNewPointInMap(String typeValue, int instanceNumber, Point point) {
         Map<Integer, Point> pointMapByType = pointMap.get(typeValue);
         if (pointMapByType == null) pointMapByType = new HashMap<>();
@@ -187,7 +199,7 @@ public class BacnetLocalDevice implements Runnable {
 
     public void sendBroadcast(OctetString linkService, UnconfirmedRequestService serviceRequest)
             throws BACnetException {
-        Address address = ipNetwork.getBroadcastAddress(port);
+        Address address = ipNetwork.getBroadcastAddress(localPort);
         ipNetwork.sendAPDU(address, linkService, new UnconfirmedRequest(serviceRequest), true);
     }
 
@@ -195,20 +207,55 @@ public class BacnetLocalDevice implements Runnable {
         return localDevice;
     }
 
+    public void sendWhoIsRequestMessage() {
+        try {
+            sendBroadcast(null, new WhoIsRequest());
+            logger.info("SEND WhoIsRequest");
+        } catch (BACnetException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public boolean isRunning() {
+        return running;
+    }
+
+    public boolean registerForeignDevice(String ip, int port) {
+        if (bbmdEnable & (port != localPort | !ip.equals(localIp))) {
+            try {
+                ipNetwork.registerAsForeignDevice(new java.net.InetSocketAddress(ip, port), 100);
+                logger.info("BBMD Remote device registered: " + ip + ":" + port);
+                return true;
+            } catch (Exception e) {
+                logger.error(ip + ":" + port + " - " + e.getMessage());
+                return false;
+            }
+        }
+        return false;
+    }
 
     @Override
     public void run() {
         try {
-            int sec = 5;
-            logger.info("BACnet localDevice wait starts in " + sec + " sec");
+            int sec = 10;
+            logger.info("BACnet localDevice wait, starts in " + sec + " sec");
             Thread.sleep(TimeUnit.SECONDS.toMillis(sec));
         } catch (InterruptedException e) {
             logger.error(e.toString());
         }
         try {
-            logger.info("BACnet localDevice " + localIp + ":" + port + " running");
+            logger.info("BACnet localDevice " + localIp + ":" + localPort + " running");
             localDevice.initialize();
-
+            this.running = true;
+            while (true) {
+                boolean result = registerForeignDevice(bbmdIp, bbmdPort);
+                if (result) {
+                    break;
+                } else {
+                    Thread.sleep(1000);
+                }
+            }
+            /*
             try {
                 ipNetwork.registerAsForeignDevice(new java.net.InetSocketAddress(bbmdIp, bbmdPort), 100);
             } catch (Exception ignored) {
@@ -226,20 +273,13 @@ public class BacnetLocalDevice implements Runnable {
                     }
                 }
             }
-
-//            while (true) {
-//                try {
-//                    ipNetwork.registerAsForeignDevice(new java.net.InetSocketAddress("192.168.1.5", 0xBAC2), 60);
-//                    System.out.println("REGISTED");
-//                } catch (Exception e) {
-//                    System.out.println(e);
-//                }
-//            }
-
+            */
 
         } catch (Exception e) {
+            this.running = false;
             logger.info("BACnet localDevice stopped");
-            logger.error(e.toString());
+            logger.error("run() " + e.getMessage());
+            logger.error("run() " + Arrays.toString(e.getStackTrace()));
             localDevice.terminate();
         }
     }

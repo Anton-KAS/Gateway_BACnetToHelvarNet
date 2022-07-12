@@ -21,7 +21,7 @@ public class HelvarPoint {
 
     private final String M_FADE_TIME;
 
-    public HelvarPoint(String host, int group, boolean dimming, String description) {
+    public HelvarPoint(String host, int group, boolean dimming, int fadeTime, String description) {
         this.host = host;
         this.group = group;
         this.description = description;
@@ -30,9 +30,7 @@ public class HelvarPoint {
 
         this.M_GROUP = String.format("G:%s", group);
 
-        int fade_time = dimming ? 200 : 0;
-
-        this.M_FADE_TIME = String.format("F:%s", fade_time);
+        this.M_FADE_TIME = String.format("F:%s", fadeTime);
         //System.out.println(this);
     }
 

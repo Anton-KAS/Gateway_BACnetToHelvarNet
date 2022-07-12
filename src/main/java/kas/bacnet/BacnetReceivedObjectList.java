@@ -18,7 +18,7 @@ public enum BacnetReceivedObjectList {
     }
 
     public void addValueInTheEnd(Address from, BACnetObject obj, PropertyValue pv) {
-        System.out.println("BacnetReceivedObjectList " + pv);
+        //System.out.println("BacnetReceivedObjectList " + pv);
         objectList.addLast(new BacnetReceivedObject(from, obj, pv));
     }
 

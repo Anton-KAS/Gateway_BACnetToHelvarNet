@@ -65,6 +65,7 @@ public class ExcelParserTest {
         //act
         String result = excel.parseXlsxToJson().toString();
         System.out.println(result);
+        System.out.println(result);
 
         //assert
         assertEquals(expected, result);
