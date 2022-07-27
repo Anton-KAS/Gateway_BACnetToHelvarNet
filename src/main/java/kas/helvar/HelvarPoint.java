@@ -69,9 +69,13 @@ public class HelvarPoint {
     public String getRecallSceneQuery(int sceneNum) {
         sceneNum = Math.min(sceneNum, 16);
         sceneNum = Math.max(sceneNum, 1);
+        String fadeTime = M_FADE_TIME;
+        if (sceneNum == 12) {
+            fadeTime = String.format("F:%s", 1); // TODO: MAGIC NUMBER!!!
+        }
         String command = "C:11";
         String scene = String.format("S:%s", sceneNum);
-        return String.format("%s,%s,%s,%s,%s,%s,%s%s", M_START, command, M_GROUP, M_CONSTANT_LIGHT, M_BLOCK, scene, M_FADE_TIME, M_TERMINATOR);
+        return String.format("%s,%s,%s,%s,%s,%s,%s%s", M_START, command, M_GROUP, M_CONSTANT_LIGHT, M_BLOCK, scene, fadeTime, M_TERMINATOR);
     }
 
     public String getDirectLevelQuery(int directLevelInt) {

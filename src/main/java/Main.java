@@ -66,11 +66,12 @@ public class Main {
             int controllerReg = (int) controller.get("CONTROLLER_REGISTER");
 
             try {
-                Socket socket = new Socket(host, port);
-                logger.info("new Socket " + host + ":" + port);
+                //Socket socket = new Socket(host, port);
+                //logger.info("new Socket " + host + ":" + port);
 
                 logger.info("new Helvar Controller Listener " + host + ":" + port);
-                HelvarControllerListener helvarControllerlistener = new HelvarControllerListener(host, port, socket, controllerReg);
+                //HelvarControllerListener helvarControllerlistener = new HelvarControllerListener(host, port, socket, controllerReg);
+                HelvarControllerListener helvarControllerlistener = new HelvarControllerListener(host, port, controllerReg);
                 Thread helvarControllerListenerThread = new Thread(helvarControllerlistener);
                 helvarControllerListenerThread.setName("helvarControllerListenerThread " + host);
                 threadList.put(helvarControllerlistener, helvarControllerListenerThread);

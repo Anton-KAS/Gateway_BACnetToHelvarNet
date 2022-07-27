@@ -14,8 +14,10 @@ public class HelvarControllerListener implements Runnable {
     private final Logger logger;
     private final String host;
     private final int port;
-    private final Socket socket;
+    //private final Socket socket;
+    private Socket socket;
     private final int SOCKET_TIMEOUT;
+    private final long SHORT_SOCKET_TIMEOUT;
     private BufferedReader fromRouter;
     private DataOutputStream toRouter;
     private final LinkedList<String[]> sendMessageList;
@@ -23,19 +25,21 @@ public class HelvarControllerListener implements Runnable {
     private volatile boolean running;
     private final int controllerReg;
 
-    public HelvarControllerListener(String host, int port, final Socket socket, int controllerReg) {
+    public HelvarControllerListener(String host, int port, int controllerReg) throws IOException {
         this.logger = Logger.getLogger(HelvarControllerListener.class);
         this.host = host;
         this.port = port;
-        this.socket = socket;
-        this.SOCKET_TIMEOUT = 250;
+        //this.socket = new Socket(host, port);
+        this.SOCKET_TIMEOUT = 2000;
+        this.SHORT_SOCKET_TIMEOUT = this.SOCKET_TIMEOUT / 10;
         this.sendMessageList = new LinkedList<>();
-        this.MAX_SEND_MESSAGE_LENGTH = 300;
+        this.MAX_SEND_MESSAGE_LENGTH = 10;
         this.running = false;
         this.controllerReg = controllerReg;
     }
 
-    private void listen() throws IOException {
+    private synchronized void listen() throws IOException {
+        long startTime = System.nanoTime();
         StringBuilder sb = new StringBuilder();
         try {
             int value;
@@ -44,7 +48,10 @@ public class HelvarControllerListener implements Runnable {
                 sb.append((char) value);
                 char charValue = (char) value;
                 String stringValue = String.valueOf(charValue);
-                if ((stringValue).equals("#") & sb.length() > 300) break;
+                long duration = (System.nanoTime() - startTime) / 1000000;
+
+                if ((stringValue).equals("#") & sb.length() > MAX_SEND_MESSAGE_LENGTH & duration > SHORT_SOCKET_TIMEOUT)
+                    break;
             }
         } catch (SocketTimeoutException e) {
             //logger.error(e);
@@ -105,6 +112,7 @@ public class HelvarControllerListener implements Runnable {
         try {
             while (true) {
                 if (!running) {
+                    this.socket = new Socket(host, port);
                     logger.info("Helvar Listener " + host + ":" + port + " - running");
                     fromRouter = new BufferedReader(new InputStreamReader(socket.getInputStream(), StandardCharsets.UTF_8), 1600);
                     toRouter = new DataOutputStream(socket.getOutputStream());

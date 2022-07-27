@@ -132,6 +132,7 @@ public class ReceivedObjectProcessorTest {
                 Arguments.of("!V:1,C:104,@:2.2.1.1=11#", "192.168.1.1", 0, null, 0f, 0, false),
                 Arguments.of("?V:1,C:103,G:5,B:1=4#", null, 5, "av", 4f, 1, false),
                 Arguments.of(">V:1.1,C:11,G:17,K:1,B:1,S:5,F:90#?V:1,C:103,G:17,B:1=5#", "192.168.1.1", 17, "av", 5f, 2, true)
+                // TODO: Add ""
         );
     }
 
