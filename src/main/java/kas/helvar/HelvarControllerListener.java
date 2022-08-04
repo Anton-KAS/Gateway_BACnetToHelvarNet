@@ -17,7 +17,7 @@ public class HelvarControllerListener implements Runnable {
     //private final Socket socket;
     private Socket socket;
     private final int SOCKET_TIMEOUT;
-    private final long SHORT_SOCKET_TIMEOUT;
+    private final int SHORT_SOCKET_TIMEOUT;
     private BufferedReader fromRouter;
     private DataOutputStream toRouter;
     private final LinkedList<String[]> sendMessageList;
@@ -49,7 +49,9 @@ public class HelvarControllerListener implements Runnable {
                 char charValue = (char) value;
                 String stringValue = String.valueOf(charValue);
                 long duration = (System.nanoTime() - startTime) / 1000000;
-
+                if (stringValue.equals("#")) {
+                    socket.setSoTimeout(SHORT_SOCKET_TIMEOUT);
+                }
                 if ((stringValue).equals("#") & sb.length() > MAX_SEND_MESSAGE_LENGTH & duration > SHORT_SOCKET_TIMEOUT)
                     break;
             }
@@ -58,6 +60,7 @@ public class HelvarControllerListener implements Runnable {
         }
         String resp = sb.toString();
         if (resp.length() > 0) {
+            socket.setSoTimeout(SOCKET_TIMEOUT);
             logger.info(String.format("Listener RECEIVED\tfrom Helvar.net %s:%s : value <--- %s", host, port, resp));
             HelvarReceivedObjectList.HELVAR_RECEIVED_OBJECT_LIST.addValueToTheEnd(host, sb.toString());
         }
