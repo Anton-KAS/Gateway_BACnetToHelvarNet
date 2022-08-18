@@ -41,7 +41,7 @@ public class HelvarControllerListener implements Runnable {
         StringBuilder sb = new StringBuilder();
         try {
             int value;
-
+            socket.setSoTimeout(SOCKET_TIMEOUT);
             while ((value = fromRouter.read()) != -1) {
                 sb.append((char) value);
                 char charValue = (char) value;
@@ -57,7 +57,6 @@ public class HelvarControllerListener implements Runnable {
         }
         String resp = sb.toString();
         if (resp.length() > 0) {
-            socket.setSoTimeout(SOCKET_TIMEOUT);
             logger.info(String.format("Listener RECEIVED\tfrom Helvar.net %s:%s : value <--- %s", host, port, resp));
             HelvarReceivedObjectList.HELVAR_RECEIVED_OBJECT_LIST.addValueToTheEnd(host, sb.toString());
         }
@@ -77,7 +76,7 @@ public class HelvarControllerListener implements Runnable {
             toRouter.writeInt(toSend.length());
             toRouter.write(dataInBytes, 0, toSend.length());
             toRouter.flush();
-            HelvarReceivedObjectList.HELVAR_RECEIVED_OBJECT_LIST.addValueToTheEnd(host, toSend);
+            HelvarReceivedObjectList.HELVAR_RECEIVED_OBJECT_LIST.addValueToTheEnd(host, toSend); // TODO Подумать, может всё же не стоит?
         }
     }
 
