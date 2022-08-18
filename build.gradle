@@ -4,7 +4,7 @@ plugins {
 }
 
 group 'kas'
-version '0.1.7-SNAPSHOT'
+version '0.1.8-SNAPSHOT'
 
 repositories {
     mavenCentral()
@@ -53,7 +53,7 @@ test {
 
 jar {
     baseName("KASgateway")
-    version("0.1.7")
+    version("0.1.8")
     manifest{attributes "Main-Class": "Main"}
 }
 
@@ -61,5 +61,5 @@ jar {
 shadowJar {
     archiveBaseName.set('KASgateway_app')
     archiveClassifier.set('')
-    archiveVersion.set('0.1.7')
+    archiveVersion.set('0.1.8')
 }
