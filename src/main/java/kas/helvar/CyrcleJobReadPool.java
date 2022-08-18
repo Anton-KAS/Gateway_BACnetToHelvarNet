@@ -12,7 +12,7 @@ public class CyrcleJobReadPool implements Runnable {
 
     private final String host;
     private final Map<Integer, HelvarPoint> pointsMap;
-    private volatile HelvarControllerListener listener;
+    private final HelvarControllerListener listener;
 
     public CyrcleJobReadPool(String host, HelvarControllerListener listener) {
         this.logger = Logger.getLogger(ExcelParser.class);

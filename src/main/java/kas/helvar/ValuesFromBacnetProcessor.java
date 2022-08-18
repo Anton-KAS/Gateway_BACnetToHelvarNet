@@ -7,18 +7,16 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-//import static kas.bacnet.BacnetReceivedObjectList.BACNET_RECEIVED_OBJECT_LIST;
 import static kas.helvar.HelvarPointsMap.HELVAR_POINTS_MAP;
 
 public class ValuesFromBacnetProcessor implements Runnable {
     private final Logger logger;
 
-    private volatile Map<String, HelvarControllerListener> listenerMap;
-    private volatile BacnetReceivedObjectList bacnetReceivedObjectList;
+    private final Map<String, HelvarControllerListener> listenerMap;
+    private final BacnetReceivedObjectList bacnetReceivedObjectList;
 
     public ValuesFromBacnetProcessor(BacnetReceivedObjectList bacnetReceivedObjectList) {
         this.logger = Logger.getLogger(ValuesFromBacnetProcessor.class);
@@ -49,9 +47,9 @@ public class ValuesFromBacnetProcessor implements Runnable {
 
     @Override
     public void run() {
+        //noinspection InfiniteLoopStatement
         while (true) {
             try {
-                //BacnetReceivedObject bacnetReceivedObject = BACNET_RECEIVED_OBJECT_LIST.getFirst();
                 BacnetReceivedObject bacnetReceivedObject = bacnetReceivedObjectList.getFirst();
 
                 int group = bacnetReceivedObject.getObjectId();

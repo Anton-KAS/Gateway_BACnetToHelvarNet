@@ -35,7 +35,8 @@ public class ValuesToBacnetProcessor implements Runnable {
 
     @Override
     public void run() {
-        while(true) {
+        //noinspection InfiniteLoopStatement
+        while (true) {
             try {
                 HELVAR_RECEIVED_OBJECT_LIST.processing(host);
             } catch (Exception e) {
