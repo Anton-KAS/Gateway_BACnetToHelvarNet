@@ -10,7 +10,7 @@ public enum BacnetReceivedObjectList {
     BACNET_RECEIVED_OBJECT_LIST;
 
     private final long start;
-    private volatile LinkedBlockingDeque<BacnetReceivedObject> objectList;
+    private final LinkedBlockingDeque<BacnetReceivedObject> objectList;
 
     BacnetReceivedObjectList() {
         this.start = System.currentTimeMillis();
@@ -18,7 +18,6 @@ public enum BacnetReceivedObjectList {
     }
 
     public void addValueInTheEnd(Address from, BACnetObject obj, PropertyValue pv) {
-        //System.out.println("BacnetReceivedObjectList " + pv);
         objectList.addLast(new BacnetReceivedObject(from, obj, pv));
     }
 

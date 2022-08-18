@@ -14,7 +14,6 @@ public class BacnetReceivedObject {
         this.from = from;
         this.obj = obj;
         this.pv = pv;
-        //System.out.println("NEW BRO: " + from + " | " + obj + " | " + pv);
     }
 
     public int getObjectId() {

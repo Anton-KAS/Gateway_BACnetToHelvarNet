@@ -2,19 +2,13 @@ package kas.bacnet;
 
 import com.serotonin.bacnet4j.LocalDevice;
 import com.serotonin.bacnet4j.RemoteDevice;
-import com.serotonin.bacnet4j.apdu.UnconfirmedRequest;
-import com.serotonin.bacnet4j.exception.BACnetException;
 import com.serotonin.bacnet4j.npdu.ip.IpNetwork;
 import com.serotonin.bacnet4j.npdu.ip.IpNetworkBuilder;
-import com.serotonin.bacnet4j.service.unconfirmed.UnconfirmedRequestService;
-import com.serotonin.bacnet4j.service.unconfirmed.WhoIsRequest;
 import com.serotonin.bacnet4j.transport.DefaultTransport;
-import com.serotonin.bacnet4j.type.constructed.Address;
 import com.serotonin.bacnet4j.type.enumerated.EngineeringUnits;
 import com.serotonin.bacnet4j.type.enumerated.PropertyIdentifier;
 import com.serotonin.bacnet4j.type.enumerated.Segmentation;
 import com.serotonin.bacnet4j.type.primitive.CharacterString;
-import com.serotonin.bacnet4j.type.primitive.OctetString;
 import com.serotonin.bacnet4j.type.primitive.UnsignedInteger;
 import org.apache.log4j.Logger;
 import org.json.simple.JSONObject;
@@ -51,13 +45,10 @@ public class BacnetLocalDevice implements Runnable {
     private final IpNetwork ipNetwork;
 
     final List<RemoteDevice> remoteDevices;
-    //private final Listener listener;
 
-    private boolean bbmdEnable = false;
+    private final boolean bbmdEnable;
     private String bbmdIp = "0.0.0.0";
     private int bbmdPort = 0;
-
-    private volatile boolean running;
 
     public BacnetLocalDevice(Properties BacnetConfig) {
         this.logger = Logger.getLogger(BacnetLocalDevice.class);
@@ -92,7 +83,6 @@ public class BacnetLocalDevice implements Runnable {
         this.remoteDevices = new ArrayList<>();
 
         this.localDevice.getEventHandler().addListener(new Listener(localDevice, remoteDevices, this));
-        this.running = false;
     }
 
     public BacnetReceivedObjectList getBacnetReceivedObjectList() {
@@ -102,7 +92,6 @@ public class BacnetLocalDevice implements Runnable {
     private IpNetwork getNetwork() {
         return new IpNetworkBuilder()
                 .withBroadcast(broadcastIp, networkLength)
-                //.withSubnet(subnetIp, networkLength)
                 .withLocalBindAddress(localIp)
                 .withPort(localPort)
                 .withReuseAddress(true)
@@ -196,30 +185,6 @@ public class BacnetLocalDevice implements Runnable {
         return pointMap;
     }
 
-
-    public void sendBroadcast(OctetString linkService, UnconfirmedRequestService serviceRequest)
-            throws BACnetException {
-        Address address = ipNetwork.getBroadcastAddress(localPort);
-        ipNetwork.sendAPDU(address, linkService, new UnconfirmedRequest(serviceRequest), true);
-    }
-
-    public LocalDevice getLocalDevice() {
-        return localDevice;
-    }
-
-    public void sendWhoIsRequestMessage() {
-        try {
-            sendBroadcast(null, new WhoIsRequest());
-            logger.info("SEND WhoIsRequest");
-        } catch (BACnetException e) {
-            e.printStackTrace();
-        }
-    }
-
-    public boolean isRunning() {
-        return running;
-    }
-
     public boolean registerForeignDevice(String ip, int port) {
         if (bbmdEnable & (port != localPort | !ip.equals(localIp))) {
             try {
@@ -246,37 +211,17 @@ public class BacnetLocalDevice implements Runnable {
         try {
             logger.info("BACnet localDevice " + localIp + ":" + localPort + " running");
             localDevice.initialize();
-            this.running = true;
             while (true) {
                 boolean result = registerForeignDevice(bbmdIp, bbmdPort);
                 if (result) {
                     break;
                 } else {
+                    //noinspection BusyWait
                     Thread.sleep(1000);
                 }
             }
-            /*
-            try {
-                ipNetwork.registerAsForeignDevice(new java.net.InetSocketAddress(bbmdIp, bbmdPort), 100);
-            } catch (Exception ignored) {
-            }
-
-            if (bbmdEnable) {
-                while (true) {
-                    try {
-                        Thread.sleep(500);
-                        ipNetwork.sendForeignDeviceRegistration();
-                        logger.info("BBMD Remote device registered");
-                        break;
-                    } catch (Exception e) {
-                        logger.error("BBMD Remote device: " + e);
-                    }
-                }
-            }
-            */
 
         } catch (Exception e) {
-            this.running = false;
             logger.info("BACnet localDevice stopped");
             logger.error("run() " + e.getMessage());
             logger.error("run() " + Arrays.toString(e.getStackTrace()));

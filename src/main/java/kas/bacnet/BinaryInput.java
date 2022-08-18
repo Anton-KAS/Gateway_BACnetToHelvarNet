@@ -2,14 +2,12 @@ package kas.bacnet;
 
 import com.serotonin.bacnet4j.LocalDevice;
 import com.serotonin.bacnet4j.exception.BACnetServiceException;
-import com.serotonin.bacnet4j.obj.AnalogInputObject;
 import com.serotonin.bacnet4j.obj.BinaryInputObject;
 import com.serotonin.bacnet4j.type.enumerated.BinaryPV;
 import com.serotonin.bacnet4j.type.enumerated.EngineeringUnits;
 import com.serotonin.bacnet4j.type.enumerated.Polarity;
 import com.serotonin.bacnet4j.type.enumerated.PropertyIdentifier;
 import com.serotonin.bacnet4j.type.primitive.CharacterString;
-import com.serotonin.bacnet4j.type.primitive.Real;
 
 public class BinaryInput extends Point {
     private final BinaryPV presentValue;
@@ -35,9 +33,9 @@ public class BinaryInput extends Point {
     public synchronized void setValue(Object value) {
         BinaryPV valueToSet;
         if ((float) value == 1f) {
-            valueToSet =  BinaryPV.active;
+            valueToSet = BinaryPV.active;
         } else {
-            valueToSet =  BinaryPV.inactive;
+            valueToSet = BinaryPV.inactive;
         }
         obj.writePropertyInternal(PropertyIdentifier.presentValue, valueToSet);
     }
