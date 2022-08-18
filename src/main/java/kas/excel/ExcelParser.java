@@ -53,6 +53,7 @@ public class ExcelParser {
                 logger.info("Searching file in resources: " + fileName + " : " + fileName);
                 ClassLoader classLoader = getClass().getClassLoader();
                 InputStream inputStream3 = classLoader.getResourceAsStream(fileName);
+                assert inputStream3 != null;
                 wb = new XSSFWorkbook(inputStream3);
             }
 
@@ -60,10 +61,9 @@ public class ExcelParser {
 
             for (int i = 0; i < wb.getNumberOfSheets(); i++) {
                 XSSFSheet sheet = wb.getSheetAt(i);
-                //System.out.println("1 - " + sheet.getSheetName());
                 if (sheet.getSheetName().equals(DefaultSheets.DESCRIPTION.toString()) |
                         sheet.getSheetName().equals(DefaultSheets.PATTERN.toString()) |
-                        sheet.getSheetName().equals(DefaultSheets.SETTINGS.toString())) { // TODO: Добавить обработчик параметров
+                        sheet.getSheetName().equals(DefaultSheets.SETTINGS.toString())) {
                     continue;
                 }
 
@@ -74,7 +74,6 @@ public class ExcelParser {
                 int headRowIndex = -1;
                 int[] headColIndexes = new int[mainHeaders.length];
                 for (Row row : sheet) {
-                    //System.out.println("2 Row num - " + row.getRowNum());
                     JSONObject jsonPoint = new JSONObject();
 
                     Iterator<Cell> cellIterator = row.cellIterator();
@@ -82,7 +81,6 @@ public class ExcelParser {
                         Cell cell = cellIterator.next();
                         int cellColumnIndex = cell.getColumnIndex();
                         int cellRowIndex = cell.getRowIndex();
-                        //System.out.println("3 Cell num - " + cellColumnIndex + "|" + cellRowIndex);
                         switch (cell.getCellType()) {
 
                             case STRING:
@@ -252,8 +250,8 @@ public class ExcelParser {
         if (ipParts.size() != 4) return false;
 
         String[] stringPatterns = {"0{0,2}[1-9]", "0?[1-9][0-9]", "1[0-9]{1,2}", "2[0-4][0-9]", "25[0-4]"};
-
         Pattern[] patterns = new Pattern[stringPatterns.length];
+
         for (int n = 0; n < stringPatterns.length; n++) {
             patterns[n] = Pattern.compile(stringPatterns[n]);
         }
