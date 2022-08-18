@@ -20,37 +20,22 @@ public class HelvarPoint {
     private final String M_CONSTANT_LIGHT = "K:1";
 
     private final String M_FADE_TIME;
+    private final String M_FADE_TIME_MIN;
 
     public HelvarPoint(String host, int group, boolean dimming, int fadeTime, String description) {
         this.host = host;
         this.group = group;
         this.description = description;
         this.dimming = dimming;
-        //this.client = new Client(ipController, portController);
 
         this.M_GROUP = String.format("G:%s", group);
-
         this.M_FADE_TIME = String.format("F:%s", fadeTime);
-        //System.out.println(this);
+        this.M_FADE_TIME_MIN = String.format("F:%s", 1);
     }
 
-    public String getHost() { return host; }
-//
-//    public int getGroup() {
-//        return group;
-//    }
-//
-//    public void setSceneValue(float sceneValue) {
-//        this.sceneValue = sceneValue;
-//    }
-//
-//    public void setDirectLevelValue(float directLevelValue) {
-//        this.directLevelValue = directLevelValue;
-//    }
-//
-//    public void setConsumptionValue(float consumptionValue) {
-//        this.consumptionValue = consumptionValue;
-//    }
+    public String getHost() {
+        return host;
+    }
 
     public String getReadSceneQuery() {
         // LSIB - Last Scene In Block
@@ -59,27 +44,26 @@ public class HelvarPoint {
     }
 
     public String getReadConsumptionQuery() {
-        if (!dimming) {
-            return null;
-        }
         String CONSUMPTION_COMMAND = "C:161";
+
+        if (!dimming) return null;
+
         return String.format("%s,%s,%s%s", M_START, CONSUMPTION_COMMAND, M_GROUP, M_TERMINATOR);
     }
 
     public String getRecallSceneQuery(int sceneNum) {
+        String command = "C:11";
+
         sceneNum = Math.min(sceneNum, 16);
         sceneNum = Math.max(sceneNum, 1);
-        String fadeTime = M_FADE_TIME;
-        if (sceneNum == 12) {
-            fadeTime = String.format("F:%s", 1); // TODO: MAGIC NUMBER!!!
-        }
-        String command = "C:11";
+        String fadeTime = sceneNum == 12 ? M_FADE_TIME_MIN : M_FADE_TIME;
         String scene = String.format("S:%s", sceneNum);
         return String.format("%s,%s,%s,%s,%s,%s,%s%s", M_START, command, M_GROUP, M_CONSTANT_LIGHT, M_BLOCK, scene, fadeTime, M_TERMINATOR);
     }
 
     public String getDirectLevelQuery(int directLevelInt) {
         String command = "C:13";
+
         directLevelInt = Math.min(directLevelInt, 100);
         directLevelInt = Math.max(directLevelInt, 0);
         String direct_level = String.format("L:%s", directLevelInt);

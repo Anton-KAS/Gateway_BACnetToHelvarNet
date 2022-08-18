@@ -53,8 +53,7 @@ public class HelvarControllerListener implements Runnable {
                 if ((stringValue).equals("#") & sb.length() > MAX_SEND_MESSAGE_LENGTH & duration > SHORT_SOCKET_TIMEOUT)
                     break;
             }
-        } catch (SocketTimeoutException e) {
-            //logger.error(e);
+        } catch (SocketTimeoutException ignore) {
         }
         String resp = sb.toString();
         if (resp.length() > 0) {
@@ -103,9 +102,11 @@ public class HelvarControllerListener implements Runnable {
         VALUES_TO_BACNET.setValue("bi", controllerReg, floatValue);
     }
 
+    @SuppressWarnings("BusyWait")
     @Override
     public void run() {
         try {
+            //noinspection InfiniteLoopStatement
             while (true) {
                 try {
                     if (!running) {

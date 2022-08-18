@@ -23,15 +23,7 @@ public enum HelvarPointsMap implements SetValueFromHelvarNet {
             String keyIp = (String) o;
             JSONObject controller = (JSONObject) json.get(keyIp);
             String ipController = (String) controller.get(DefaultHeader.IP_CONTROLLER.toString());
-            /*
-            int portController;
-            try {
-                portController = (int) controller.get(DefaultHeader.PORT_CONTROLLER.toString());
-            } catch (ClassCastException cce) {
-                long longPortController = (long) controller.get(DefaultHeader.PORT_CONTROLLER.toString());
-                portController = (int) longPortController;
-            }
-             */
+
             JSONObject points = (JSONObject) controller.get("Points");
             for (Object p : points.keySet()) {
                 String pKey = (String) p;
