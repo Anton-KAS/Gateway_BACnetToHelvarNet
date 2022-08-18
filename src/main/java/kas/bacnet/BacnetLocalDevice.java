@@ -117,7 +117,7 @@ public class BacnetLocalDevice implements Runnable {
             String key = (String) o;
             JSONObject controller = (JSONObject) json.get(key);
 
-            int controllerReg = (int) controller.get("CONTROLLER_REGISTER");
+            int controllerReg = (int)(long) controller.get("CONTROLLER_REGISTER");
             addBinaryInput(controllerReg, "offline", "Helvar Controller Status " + controller.get("IP_CONTROLLER") + " | " + controller.get("LIGHT_PANEL"));
 
             JSONObject points = (JSONObject) controller.get("Points");

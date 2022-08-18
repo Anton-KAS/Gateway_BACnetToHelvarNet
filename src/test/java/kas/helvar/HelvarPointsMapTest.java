@@ -21,10 +21,10 @@ public class HelvarPointsMapTest {
     }
 
     @Test
-    public void testAddPointsFromJson() throws IOException {
+    public void testAddPointsFromJson() {
         //arrange
         JSONObject expected = parseExpectedJson();
-        System.out.println("PRINT: 2 " + expected.toString());
+
         //act
         boolean result = HelvarPointsMap.HELVAR_POINTS_MAP.addPointsFromJson(expected);
 
