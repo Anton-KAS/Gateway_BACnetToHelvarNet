@@ -14,7 +14,6 @@ public class HelvarControllerListener implements Runnable {
     private final Logger logger;
     private final String host;
     private final int port;
-    //private final Socket socket;
     private Socket socket;
     private final int SOCKET_TIMEOUT;
     private final int SHORT_SOCKET_TIMEOUT;
@@ -29,7 +28,6 @@ public class HelvarControllerListener implements Runnable {
         this.logger = Logger.getLogger(HelvarControllerListener.class);
         this.host = host;
         this.port = port;
-        //this.socket = new Socket(host, port);
         this.SOCKET_TIMEOUT = 2000;
         this.SHORT_SOCKET_TIMEOUT = this.SOCKET_TIMEOUT / 10;
         this.sendMessageList = new LinkedList<>();
@@ -85,11 +83,6 @@ public class HelvarControllerListener implements Runnable {
     }
 
     public synchronized void setCycleSendMessage(String message) {
-        /*
-        if (sendMessageList.size() > MAX_SEND_MESSAGE_LENGTH) {
-            return;
-        }
-         */
         String[] toSendPoint = {"repeating", message};
         sendMessageList.addLast(toSendPoint);
     }
@@ -114,15 +107,16 @@ public class HelvarControllerListener implements Runnable {
     public void run() {
         try {
             while (true) {
-                if (!running) {
-                    this.socket = new Socket(host, port);
-                    logger.info("Helvar Listener " + host + ":" + port + " - running");
-                    fromRouter = new BufferedReader(new InputStreamReader(socket.getInputStream(), StandardCharsets.UTF_8), 1600);
-                    toRouter = new DataOutputStream(socket.getOutputStream());
-                    socket.setSoTimeout(SOCKET_TIMEOUT);
-                    setStatusToBacnet(true);
-                }
                 try {
+                    if (!running) {
+                        logger.info("Helvar Listener " + host + ":" + port + " - try to starting up");
+                        this.socket = new Socket(host, port);
+                        fromRouter = new BufferedReader(new InputStreamReader(socket.getInputStream(), StandardCharsets.UTF_8), 1600);
+                        toRouter = new DataOutputStream(socket.getOutputStream());
+                        socket.setSoTimeout(SOCKET_TIMEOUT);
+                        setStatusToBacnet(true);
+                        logger.info("Helvar Listener " + host + ":" + port + " - running");
+                    }
                     send();
                     listen();
                 } catch (Exception e) {
@@ -133,7 +127,7 @@ public class HelvarControllerListener implements Runnable {
                     Thread.sleep(5000);
                 }
             }
-        } catch (IOException | InterruptedException e) {
+        } catch (InterruptedException e) {
             setStatusToBacnet(false);
             logger.info("Helvar Listener " + host + ":" + port + " - stopped");
             logger.error("Listener run() - " + e);
@@ -144,7 +138,6 @@ public class HelvarControllerListener implements Runnable {
     public boolean equals(Object obj) {
         if (this == obj) return true;
         if (obj == null || !obj.getClass().equals(HelvarControllerListener.class)) return false;
-
         HelvarControllerListener altObject = (HelvarControllerListener) obj;
 
         return Objects.equals(host, altObject.host);

@@ -35,22 +35,22 @@ public class HelvarPoint {
     }
 
     public String getHost() { return host; }
-
-    public int getGroup() {
-        return group;
-    }
-
-    public void setSceneValue(float sceneValue) {
-        this.sceneValue = sceneValue;
-    }
-
-    public void setDirectLevelValue(float directLevelValue) {
-        this.directLevelValue = directLevelValue;
-    }
-
-    public void setConsumptionValue(float consumptionValue) {
-        this.consumptionValue = consumptionValue;
-    }
+//
+//    public int getGroup() {
+//        return group;
+//    }
+//
+//    public void setSceneValue(float sceneValue) {
+//        this.sceneValue = sceneValue;
+//    }
+//
+//    public void setDirectLevelValue(float directLevelValue) {
+//        this.directLevelValue = directLevelValue;
+//    }
+//
+//    public void setConsumptionValue(float consumptionValue) {
+//        this.consumptionValue = consumptionValue;
+//    }
 
     public String getReadSceneQuery() {
         // LSIB - Last Scene In Block
