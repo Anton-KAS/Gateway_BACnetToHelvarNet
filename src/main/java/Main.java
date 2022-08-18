@@ -1,5 +1,3 @@
-import com.serotonin.bacnet4j.LocalDevice;
-import com.serotonin.bacnet4j.exception.BACnetErrorException;
 import kas.bacnet.BacnetLocalDevice;
 import kas.bacnet.ConfigLoader;
 import kas.excel.ExcelParser;
@@ -8,12 +6,8 @@ import org.apache.log4j.Logger;
 import org.json.simple.JSONObject;
 
 import java.io.IOException;
-import java.net.Socket;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
 
 import static kas.helvar.HelvarPointsMap.HELVAR_POINTS_MAP;
 import static kas.helvar.ValuesToBacnet.VALUES_TO_BACNET;
@@ -55,7 +49,6 @@ public class Main {
 
         Set<Object> objects = jsonConfigData.keySet();
         objects.parallelStream().forEach((o) -> {
-            //ScheduledExecutorService scheduledExecutorService = Executors.newScheduledThreadPool(1);
 
             logger.info("startCyrcleJobs loop by jsonConfigData: " + o.toString());
             String key = (String) o;
@@ -66,11 +59,8 @@ public class Main {
             int controllerReg = (int) controller.get("CONTROLLER_REGISTER");
 
             try {
-                //Socket socket = new Socket(host, port);
-                //logger.info("new Socket " + host + ":" + port);
 
                 logger.info("new Helvar Controller Listener " + host + ":" + port);
-                //HelvarControllerListener helvarControllerlistener = new HelvarControllerListener(host, port, socket, controllerReg);
                 HelvarControllerListener helvarControllerlistener = new HelvarControllerListener(host, port, controllerReg);
                 Thread helvarControllerListenerThread = new Thread(helvarControllerlistener);
                 helvarControllerListenerThread.setName("helvarControllerListenerThread " + host);
@@ -89,7 +79,6 @@ public class Main {
                 Thread cyrcleJobReadPoolThread = new Thread(cyrcleJobReadPool);
                 cyrcleJobReadPoolThread.setName("cyrcleJobReadPool " + host);
                 cyrcleJobReadPoolThread.start();
-                //scheduledExecutorService.scheduleWithFixedDelay(cyrcleJobReadPool, 0, 5, TimeUnit.SECONDS);
 
                 valuesFromBacnetProcessor.addListener(host, helvarControllerlistener);
 
@@ -98,26 +87,7 @@ public class Main {
             }
         });
 
-        //Thread.sleep(5000);
         valuesFromBacnetProcessorThread.start();
         bacnetDeviceThread.start();
-
-        /*
-        while (true) {
-            if (bacnetDevice.isRunning()) {
-                try {
-                    Thread.sleep(500);
-                    bacnetDevice.sendWhoIsRequestMessage();
-                    Thread.sleep(1000);
-                } catch (Exception e) {
-                    logger.error(e.getMessage());
-                    logger.error(e.getStackTrace());
-                }
-            } else {
-                Thread.sleep(1000);
-            }
-        }
-
-         */
     }
 }

@@ -73,15 +73,9 @@ public class BacnetLocalDevice implements Runnable {
         }
 
         this.transport = new DefaultTransport(ipNetwork);
-
-
         this.localDevice = bacnetLocalDevice();
-
         this.bacnetReceivedObjectList = BACNET_RECEIVED_OBJECT_LIST;
-
-
         this.remoteDevices = new ArrayList<>();
-
         this.localDevice.getEventHandler().addListener(new Listener(localDevice, remoteDevices, this));
     }
 
@@ -117,7 +111,7 @@ public class BacnetLocalDevice implements Runnable {
             String key = (String) o;
             JSONObject controller = (JSONObject) json.get(key);
 
-            int controllerReg = (int)(long) controller.get("CONTROLLER_REGISTER");
+            int controllerReg = (int) controller.get("CONTROLLER_REGISTER");
             addBinaryInput(controllerReg, "offline", "Helvar Controller Status " + controller.get("IP_CONTROLLER") + " | " + controller.get("LIGHT_PANEL"));
 
             JSONObject points = (JSONObject) controller.get("Points");
