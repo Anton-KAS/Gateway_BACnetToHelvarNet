@@ -5,13 +5,13 @@ import java.io.IOException;
 import java.util.Properties;
 
 public class ConfigLoader {
-    private String fileName;
+    private final String fileName;
 
     public ConfigLoader() {
         this.fileName = "bacnet.config";
     }
 
-    public ConfigLoader (String fileName) {
+    public ConfigLoader(String fileName) {
         this.fileName = fileName;
     }
 
@@ -24,7 +24,6 @@ public class ConfigLoader {
         }
         return properties;
     }
-
 
 
 }
