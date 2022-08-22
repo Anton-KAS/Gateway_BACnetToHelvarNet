@@ -36,7 +36,7 @@ public class HelvarControllerListener implements Runnable {
         this.controllerReg = controllerReg;
     }
 
-    private synchronized void listen() throws IOException {
+    private void listen() throws IOException {
         long startTime = System.nanoTime();
         StringBuilder sb = new StringBuilder();
         try {
@@ -62,7 +62,7 @@ public class HelvarControllerListener implements Runnable {
         }
     }
 
-    private synchronized void send() throws IOException {
+    private void send() throws IOException {
         String[] toSendPoint = sendMessageList.pollFirst();
         assert toSendPoint != null;
         String type = toSendPoint[0];
@@ -80,12 +80,12 @@ public class HelvarControllerListener implements Runnable {
         }
     }
 
-    public synchronized void setCycleSendMessage(String message) {
+    public void setCycleSendMessage(String message) {
         String[] toSendPoint = {"repeating", message};
         sendMessageList.addLast(toSendPoint);
     }
 
-    public synchronized void setBacnetSendMessage(String message) {
+    public void setBacnetSendMessage(String message) {
         String[] toSendPoint = {"oneTime", message};
         sendMessageList.addFirst(toSendPoint);
     }
