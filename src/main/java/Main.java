@@ -75,7 +75,7 @@ public class Main {
                 valuesToBacnetProcessorThread.start();
 
                 logger.info("new cyrcleJobReadPool " + host);
-                CyrcleJobReadPool cyrcleJobReadPool = new CyrcleJobReadPool(host, helvarControllerlistener);
+                CircleJobReadPool cyrcleJobReadPool = new CircleJobReadPool(host, helvarControllerlistener);
                 Thread cyrcleJobReadPoolThread = new Thread(cyrcleJobReadPool);
                 cyrcleJobReadPoolThread.setName("cyrcleJobReadPool " + host);
                 cyrcleJobReadPoolThread.start();

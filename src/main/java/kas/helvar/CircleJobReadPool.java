@@ -7,14 +7,14 @@ import java.util.Map;
 
 import static kas.helvar.HelvarPointsMap.HELVAR_POINTS_MAP;
 
-public class CyrcleJobReadPool implements Runnable {
+public class CircleJobReadPool implements Runnable {
     private final Logger logger;
 
     private final String host;
     private final Map<Integer, HelvarPoint> pointsMap;
     private final HelvarControllerListener listener;
 
-    public CyrcleJobReadPool(String host, HelvarControllerListener listener) {
+    public CircleJobReadPool(String host, HelvarControllerListener listener) {
         this.logger = Logger.getLogger(ExcelParser.class);
 
         this.listener = listener;

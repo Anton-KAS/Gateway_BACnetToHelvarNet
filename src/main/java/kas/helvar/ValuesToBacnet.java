@@ -11,8 +11,7 @@ public enum ValuesToBacnet implements SettableValueToBacnet {
 
     private Map<String, Map<Integer, Point>> bacnetPointsMap;
 
-    ValuesToBacnet() {
-    }
+    ValuesToBacnet() {}
 
     public synchronized void setBacnetPointList(BacnetLocalDevice localDevice) {
         this.bacnetPointsMap = localDevice.getPointMap();
