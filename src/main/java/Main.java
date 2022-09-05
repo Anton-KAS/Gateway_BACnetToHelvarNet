@@ -58,6 +58,9 @@ public class Main {
             int port = (int) controller.get("PORT_CONTROLLER");
             int controllerReg = (int) controller.get("CONTROLLER_REGISTER");
 
+            valuesFromBacnetProcessorThread.start();
+            logger.info("valuesFromBacnetProcessorThread running");
+
             try {
 
                 logger.info("new Helvar Controller Listener " + host + ":" + port);
@@ -87,7 +90,6 @@ public class Main {
             }
         });
 
-        valuesFromBacnetProcessorThread.start();
         bacnetDeviceThread.start();
     }
 }
