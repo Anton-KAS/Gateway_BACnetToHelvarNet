@@ -196,7 +196,7 @@ public class BacnetLocalDevice implements Runnable {
     @Override
     public void run() {
         try {
-            int sec = 10;
+            int sec = 60;
             logger.info("BACnet localDevice wait, starts in " + sec + " sec");
             Thread.sleep(TimeUnit.SECONDS.toMillis(sec));
         } catch (InterruptedException e) {

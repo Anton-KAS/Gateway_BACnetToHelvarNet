@@ -46,11 +46,10 @@ public class Main {
         valuesFromBacnetProcessorThread.setName("valuesFromBacnetProcessor");
         threadList.put(valuesFromBacnetProcessor, valuesFromBacnetProcessorThread);
 
-
         Set<Object> objects = jsonConfigData.keySet();
         objects.parallelStream().forEach((o) -> {
 
-            logger.info("startCyrcleJobs loop by jsonConfigData: " + o.toString());
+            logger.info("startCircleJobs loop by jsonConfigData: " + o.toString());
             String key = (String) o;
             JSONObject controller = (JSONObject) jsonConfigData.get(key);
 
@@ -77,11 +76,11 @@ public class Main {
                 threadList.put(valuesToBacnetProcessor, valuesToBacnetProcessorThread);
                 valuesToBacnetProcessorThread.start();
 
-                logger.info("new cyrcleJobReadPool " + host);
-                CircleJobReadPool cyrcleJobReadPool = new CircleJobReadPool(host, helvarControllerlistener);
-                Thread cyrcleJobReadPoolThread = new Thread(cyrcleJobReadPool);
-                cyrcleJobReadPoolThread.setName("cyrcleJobReadPool " + host);
-                cyrcleJobReadPoolThread.start();
+                logger.info("new circleJobReadPool " + host);
+                CircleJobReadPool circleJobReadPool = new CircleJobReadPool(host, helvarControllerlistener);
+                Thread circleJobReadPoolThread = new Thread(circleJobReadPool);
+                circleJobReadPoolThread.setName("circleJobReadPool " + host);
+                circleJobReadPoolThread.start();
 
                 valuesFromBacnetProcessor.addListener(host, helvarControllerlistener);
 

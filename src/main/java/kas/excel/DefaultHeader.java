@@ -22,6 +22,7 @@ public enum DefaultHeader {
     }
 
     public static String[] getMainHeaders() {
-        return new String[]{HELVAR_GROUP.getHeader(), ROOM.getHeader(), ELECTRIC_GROUP.getHeader(), DIMMING.getHeader(), FADE_TIME.getHeader()};
+        return new String[]{HELVAR_GROUP.getHeader(), ROOM.getHeader(), ELECTRIC_GROUP.getHeader(),
+                DIMMING.getHeader(), FADE_TIME.getHeader()};
     }
 }
