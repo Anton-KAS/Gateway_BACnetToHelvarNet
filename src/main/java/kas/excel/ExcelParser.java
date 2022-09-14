@@ -6,6 +6,7 @@ import java.util.List;
 
 import org.apache.log4j.Logger;
 
+import java.util.Map;
 import java.util.regex.Pattern;
 
 import org.apache.poi.ss.usermodel.Cell;
@@ -16,51 +17,41 @@ import org.json.simple.JSONObject;
 
 public class ExcelParser {
     private final Logger logger;
-    private String dirPath;
-    private String fileName = "configPoints.xlsx";
+    private final String fileName;
+    private final String filePath;
 
     public ExcelParser() {
         this.logger = Logger.getLogger(ExcelParser.class);
+        this.fileName = "configPoints.xlsx";
+        this.filePath = System.getProperty("user.dir") + "\\" + fileName;
     }
 
     public ExcelParser(String dirPath, String fileName) {
         this.logger = Logger.getLogger(ExcelParser.class);
-        this.dirPath = dirPath;
         this.fileName = fileName;
+        this.filePath = dirPath + fileName;
     }
 
     public JSONObject parseXlsxToJson() {
         try {
             logger.info("Start parseXlsxToJson");
 
-            String filePath = dirPath + fileName;
             File file = new File(filePath);
-            String filePath2 = System.getProperty("user.dir") + "\\" + fileName;
-            File file2 = new File(filePath2);
 
-            XSSFWorkbook wb;
             logger.info("Excel file " + filePath + " exist: " + file.exists());
-            logger.info("Excel file " + filePath + " exist: " + file2.exists());
-            if (file.exists()) {
-                logger.info("Start parse excel file " + filePath);
-                FileInputStream inputStream = new FileInputStream(file);
-                wb = new XSSFWorkbook(inputStream);
-            } else if (file2.exists()) {
-                logger.info("Start parse excel file " + filePath2);
-                FileInputStream inputStream2 = new FileInputStream(file2);
-                wb = new XSSFWorkbook(inputStream2);
-            } else {
-                logger.info("Searching file in resources: " + fileName + " : " + fileName);
-                ClassLoader classLoader = getClass().getClassLoader();
-                InputStream inputStream3 = classLoader.getResourceAsStream(fileName);
-                assert inputStream3 != null;
-                wb = new XSSFWorkbook(inputStream3);
+            if (!file.exists()) {
+                logger.error("Excel file " + filePath + " not exist");
+                return null;
             }
-
+            logger.info("Start parse excel file " + filePath);
+            FileInputStream inputStream = new FileInputStream(file);
+            XSSFWorkbook wb = new XSSFWorkbook(inputStream);
             JSONObject jsonData = new JSONObject();
 
             for (int i = 0; i < wb.getNumberOfSheets(); i++) {
                 XSSFSheet sheet = wb.getSheetAt(i);
+
+                // Пропускаем информационные страницы в Excel
                 if (sheet.getSheetName().equals(DefaultSheets.DESCRIPTION.toString()) |
                         sheet.getSheetName().equals(DefaultSheets.PATTERN.toString()) |
                         sheet.getSheetName().equals(DefaultSheets.SETTINGS.toString())) {
@@ -75,149 +66,47 @@ public class ExcelParser {
                 int[] headColIndexes = new int[mainHeaders.length];
                 for (Row row : sheet) {
                     JSONObject jsonPoint = new JSONObject();
-
                     Iterator<Cell> cellIterator = row.cellIterator();
+
                     while (cellIterator.hasNext()) {
                         Cell cell = cellIterator.next();
                         int cellColumnIndex = cell.getColumnIndex();
                         int cellRowIndex = cell.getRowIndex();
+
+                        Map<String, Integer> headers = DefaultHeader.getMainHeadersMap();
+                        Map<Integer, String> defColName = DefaultHeader.getDefColNameMap();
+                        String cellValue;
+
                         switch (cell.getCellType()) {
-
                             case STRING:
-                                String cellValue = cell.getStringCellValue().trim();
-
+                                cellValue = cell.getStringCellValue().trim();
                                 if (cellIterator.hasNext() && headRowIndex == -1) {
-                                    // Поиск IP Контроллера
-                                    if (cellValue.equals(DefaultHeader.IP_CONTROLLER.getHeader())) {
-                                        cell = cellIterator.next();
+                                    // Поиск параметров для контроллера Helvar
+                                    findControllerParameter(cellIterator, cellValue, jsonController);
+                                }
 
-                                        String nextCellValue = cell.getStringCellValue();
-                                        if (checkIP(nextCellValue)) {
-                                            jsonController.put(DefaultHeader.IP_CONTROLLER.toString(), nextCellValue);
-
-                                            // Добавим поле со статусом контроллера (поумолчанию "Не в сети")
-                                            jsonController.put("STATUS", false);
-                                            break;
+                                for (String header : headers.keySet()) {
+                                    if (headRowIndex == -1 | cellRowIndex == headRowIndex) {
+                                        // Поиск номера столбца по названию
+                                        if (cellValue.equals(header)) {
+                                            headColIndexes[headers.get(header)] = cellColumnIndex;
+                                            if (headRowIndex == -1) headRowIndex = cellRowIndex;
                                         }
-                                    }
-
-                                    // Поиск номера порта
-                                    if (cellValue.equals(DefaultHeader.PORT_CONTROLLER.getHeader())) {
-                                        cell = cellIterator.next();
-                                        switch (cell.getCellType()) {
-                                            case STRING:
-                                                String nextCellValue = cell.getStringCellValue();
-                                                if (nextCellValue != null && nextCellValue.length() > 0) {
-                                                    jsonController.put(DefaultHeader.PORT_CONTROLLER.toString(), Integer.parseInt(nextCellValue));
-                                                    break;
-                                                }
-                                            case NUMERIC:
-                                                double doubleValue = cell.getNumericCellValue();
-                                                jsonController.put(DefaultHeader.PORT_CONTROLLER.toString(), (int) doubleValue);
-                                                break;
-                                            default:
-                                        }
-                                    }
-
-                                    // Поиск название щита освещения
-                                    if (cellValue.equals(DefaultHeader.LIGHT_PANEL.getHeader())) {
-                                        cell = cellIterator.next();
-                                        String nextCellValue = cell.getStringCellValue();
-                                        if (nextCellValue != null && nextCellValue.length() > 0) {
-                                            jsonController.put(DefaultHeader.LIGHT_PANEL.toString(), nextCellValue);
-                                            break;
-                                        }
-                                    }
-
-                                    // Поиск номера регистра для состояния контроллера
-                                    if (cellValue.equals(DefaultHeader.CONTROLLER_REGISTER.getHeader())) {
-                                        cell = cellIterator.next();
-                                        switch (cell.getCellType()) {
-                                            case STRING:
-                                                String nextCellValue = cell.getStringCellValue();
-                                                if (nextCellValue != null && nextCellValue.length() > 0) {
-                                                    jsonController.put(DefaultHeader.CONTROLLER_REGISTER.toString(), Integer.parseInt(nextCellValue));
-                                                    break;
-                                                }
-                                            case NUMERIC:
-                                                double doubleValue = cell.getNumericCellValue();
-                                                jsonController.put(DefaultHeader.CONTROLLER_REGISTER.toString(), (int) doubleValue);
-                                                break;
-                                            default:
-                                        }
+                                    } else if (cellRowIndex > headRowIndex) {
+                                        // Поиск данных в таблице
+                                        searchTableBody(headColIndexes, cellColumnIndex, headers, header, cellValue, jsonPoint);
                                     }
                                 }
-
-                                // Поиск номера столбца с Helvar группой
-                                if (cellValue.equals(DefaultHeader.HELVAR_GROUP.getHeader())) {
-                                    headColIndexes[0] = cellColumnIndex;
-                                    if (headRowIndex == -1) headRowIndex = cellRowIndex;
-                                }
-                                // Поиск номера столбца с номером помещения
-                                if (cellValue.equals(DefaultHeader.ROOM.getHeader())) {
-                                    headColIndexes[1] = cellColumnIndex;
-                                    if (headRowIndex == -1) headRowIndex = cellRowIndex;
-                                }
-                                // Поиск номера столбца с электрической группой
-                                if (cellValue.equals(DefaultHeader.ELECTRIC_GROUP.getHeader())) {
-                                    headColIndexes[2] = cellColumnIndex;
-                                    if (headRowIndex == -1) headRowIndex = cellRowIndex;
-                                }
-                                // Поиск номера столбца с диммированием
-                                if (cellValue.equals(DefaultHeader.DIMMING.getHeader())) {
-                                    headColIndexes[3] = cellColumnIndex;
-                                    if (headRowIndex == -1) headRowIndex = cellRowIndex;
-                                }
-                                // Поиск номера столбца с диммированием
-                                if (cellValue.equals(DefaultHeader.FADE_TIME.getHeader())) {
-                                    headColIndexes[4] = cellColumnIndex;
-                                    if (headRowIndex == -1) headRowIndex = cellRowIndex;
-                                }
-                                // Поисх данных по точкам
-                                if (headRowIndex != -1 && cellRowIndex > headRowIndex) {
-                                    if (headColIndexes[0] == cellColumnIndex) {
-                                        int intValue = Integer.parseInt(cellValue);
-                                        jsonPoint.put(DefaultHeader.HELVAR_GROUP.toString(), intValue);
-                                    }
-                                    if (headColIndexes[1] == cellColumnIndex) {
-                                        jsonPoint.put(DefaultHeader.ROOM.toString(), cellValue);
-                                    }
-                                    if (headColIndexes[2] == cellColumnIndex) {
-                                        jsonPoint.put(DefaultHeader.ELECTRIC_GROUP.toString(), cellValue);
-                                    }
-                                    if (headColIndexes[3] == cellColumnIndex) {
-                                        Boolean boolValue = Boolean.parseBoolean(cellValue);
-                                        jsonPoint.put(DefaultHeader.DIMMING.toString(), boolValue);
-                                    }
-                                    if (headColIndexes[4] == cellColumnIndex) {
-                                        int intValue = Integer.parseInt(cellValue);
-                                        jsonPoint.put(DefaultHeader.FADE_TIME.toString(), intValue);
-                                    }
-                                }
-
                                 break;
+
                             case NUMERIC:
+                                double doubleValue = cell.getNumericCellValue();
+                                cellValue = String.valueOf((int) doubleValue);
                                 // Поисх данных по точкам
                                 if (headRowIndex != -1 && cell.getRowIndex() > headRowIndex) {
-                                    double doubleValue = cell.getNumericCellValue();
-                                    String stringValue = Double.toString(doubleValue);
-                                    if (headColIndexes[0] == cell.getColumnIndex()) {
-                                        int intValue = (int) doubleValue;
-                                        jsonPoint.put(DefaultHeader.HELVAR_GROUP.toString(), intValue);
-                                    }
-                                    if (headColIndexes[1] == cellColumnIndex) {
-                                        jsonPoint.put(DefaultHeader.ROOM.toString(), stringValue);
-                                    }
-                                    if (headColIndexes[2] == cellColumnIndex) {
-                                        jsonPoint.put(DefaultHeader.ELECTRIC_GROUP.toString(), stringValue);
-                                    }
-                                    if (headColIndexes[3] == cellColumnIndex) {
-                                        Boolean boolValue = Boolean.parseBoolean(stringValue);
-                                        jsonPoint.put(DefaultHeader.DIMMING.toString(), boolValue);
-                                    }
-                                    if (headColIndexes[4] == cell.getColumnIndex()) {
-                                        int intValue = (int) doubleValue;
-                                        jsonPoint.put(DefaultHeader.FADE_TIME.toString(), intValue);
+                                    for (String header : headers.keySet()) {
+                                        // Поиск данных в таблице
+                                        searchTableBody(headColIndexes, cellColumnIndex, headers, header, cellValue, jsonPoint);
                                     }
                                 }
                                 break;
@@ -240,6 +129,70 @@ public class ExcelParser {
             return null;
         }
 
+    }
+
+    private static void findControllerParameter(Iterator<Cell> cellIterator, String cellValue, JSONObject jsonController) {
+        String parameterNameToAdd;
+        boolean finalDataIsInt = false;
+        if (cellValue.equals(DefaultHeader.IP_CONTROLLER.getHeader())) {
+            parameterNameToAdd = DefaultHeader.IP_CONTROLLER.toString();
+        } else if (cellValue.equals(DefaultHeader.PORT_CONTROLLER.getHeader())) {
+            parameterNameToAdd = DefaultHeader.PORT_CONTROLLER.toString();
+            finalDataIsInt = true;
+        } else if (cellValue.equals(DefaultHeader.LIGHT_PANEL.getHeader())) {
+            parameterNameToAdd = DefaultHeader.LIGHT_PANEL.toString();
+        } else if (cellValue.equals(DefaultHeader.CONTROLLER_REGISTER.getHeader())) {
+            parameterNameToAdd = DefaultHeader.CONTROLLER_REGISTER.toString();
+            finalDataIsInt = true;
+        } else return;
+
+        Cell cell = cellIterator.next();
+
+        String nextStringValue = null;
+        int nextIntValue = -1;
+
+        switch (cell.getCellType()) {
+            case STRING:
+                nextStringValue = cell.getStringCellValue();
+                break;
+            case NUMERIC:
+                nextIntValue = (int) cell.getNumericCellValue();
+                break;
+        }
+
+        if (cellValue.equals(DefaultHeader.IP_CONTROLLER.getHeader()) & !checkIP(nextStringValue)) return;
+
+        if (finalDataIsInt) {
+            if (nextStringValue != null && nextStringValue.length() > 0) {
+                nextIntValue = Integer.parseInt(nextStringValue);
+            }
+            jsonController.put(parameterNameToAdd, nextIntValue);
+        } else {
+            if (nextStringValue == null && nextIntValue != -1) {
+                nextStringValue = String.valueOf(nextIntValue);
+            }
+            jsonController.put(parameterNameToAdd, nextStringValue);
+        }
+
+        // Добавим поле со статусом контроллера (по умолчанию "Не в сети")
+        if (cellValue.equals(DefaultHeader.IP_CONTROLLER.getHeader())) jsonController.put("STATUS", false);
+    }
+
+    private static void searchTableBody(int[] headColIndexes, int cellColumnIndex,
+                             Map<String, Integer> headers, String header, String cellValue,
+                             JSONObject jsonPoint) {
+        Map<Integer, String> defColName = DefaultHeader.getDefColNameMap();
+        if (headColIndexes[headers.get(header)] == cellColumnIndex) {
+            Object putValue;
+            if (headers.get(header) == 0 | headers.get(header) == 4) {
+                putValue = Integer.parseInt(cellValue);
+            } else if (headers.get(header) == 3) {
+                putValue = Boolean.parseBoolean(cellValue);
+            } else {
+                putValue = cellValue;
+            }
+            jsonPoint.put(defColName.get(headers.get(header)), putValue);
+        }
     }
 
     // TODO: Подумать, может выделить в отдельный класс

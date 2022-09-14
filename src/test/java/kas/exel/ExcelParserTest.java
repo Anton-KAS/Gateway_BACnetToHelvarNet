@@ -15,6 +15,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class ExcelParserTest {
     ExcelParser excel;
@@ -56,6 +57,18 @@ public class ExcelParserTest {
 //        assertEquals(expected, result);
 //    }
 
+    @Test
+    public void testRealXlsxFileFind() {
+        //arrange
+        ExcelParser realExcel = new ExcelParser();
+
+        //act
+        JSONObject parseResult = realExcel.parseXlsxToJson();
+        boolean result = parseResult.getClass() == JSONObject.class;
+
+        //assert
+        assertTrue(result);
+    }
 
     @Test
     public void testParseXlsxToJson() {
