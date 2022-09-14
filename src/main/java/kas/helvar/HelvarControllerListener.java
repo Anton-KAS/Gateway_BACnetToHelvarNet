@@ -23,6 +23,8 @@ public class HelvarControllerListener implements Runnable {
     private final int MAX_SEND_MESSAGE_LENGTH;
     private volatile boolean running;
     private final int controllerReg;
+    private final String REPEATING_MESSAGE = "repeating";
+    private final String ONE_TIME_MESSAGE = "oneTime";
 
     public HelvarControllerListener(String host, int port, int controllerReg) throws IOException {
         this.logger = Logger.getLogger(HelvarControllerListener.class);
@@ -67,7 +69,7 @@ public class HelvarControllerListener implements Runnable {
         assert toSendPoint != null;
         String type = toSendPoint[0];
         String toSend = toSendPoint[1];
-        if (type.equals("repeating")) {
+        if (type.equals(REPEATING_MESSAGE)) {
             setCycleSendMessage(toSend);
         }
         if (toSend != null) {
@@ -81,13 +83,26 @@ public class HelvarControllerListener implements Runnable {
     }
 
     public void setCycleSendMessage(String message) {
-        String[] toSendPoint = {"repeating", message};
+        String[] toSendPoint = {REPEATING_MESSAGE, message};
         sendMessageList.addLast(toSendPoint);
     }
 
     public void setBacnetSendMessage(String message) {
-        String[] toSendPoint = {"oneTime", message};
-        sendMessageList.addFirst(toSendPoint);
+        String[] toSendPoint = {ONE_TIME_MESSAGE, message};
+        if (sendMessageList.size() > 1) {
+            int n = 0;
+            while (sendMessageList.get(n)[0].equals(ONE_TIME_MESSAGE)) {
+                n++;
+                if (n >= sendMessageList.size()) {
+                    n = sendMessageList.size() - 1;
+                    break;
+                }
+            }
+            sendMessageList.add(n, toSendPoint);
+        } else {
+            sendMessageList.addLast(toSendPoint);
+        }
+
     }
 
     private void setStatusToBacnet(boolean running) {
@@ -129,8 +144,8 @@ public class HelvarControllerListener implements Runnable {
             }
         } catch (InterruptedException e) {
             setStatusToBacnet(false);
-            logger.info("Helvar Listener " + host + ":" + port + " - stopped");
-            logger.error("Listener run() - " + e);
+            logger.info("Helvar Listener " + host + ":" + port + " - fatal stopped");
+            logger.fatal("Listener run() - " + e);
         }
     }
 
