@@ -34,8 +34,8 @@ public class CircleJobReadPool implements Runnable {
                 synchronized (this) {
                     HelvarPoint point = pointsMap.get(n);
                     try {
-                        listener.setCycleSendMessage(point.getReadSceneQuery());
-                        listener.setCycleSendMessage(point.getReadConsumptionQuery());
+                        listener.setRepeatingMessage(point.getReadSceneQuery());
+                        listener.setRepeatingMessage(point.getReadConsumptionQuery());
                     } catch (Exception e) {
                         logger.error("CyrcleJobReadPool run()" + e);
                     }

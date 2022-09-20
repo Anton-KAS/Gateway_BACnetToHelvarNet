@@ -19,12 +19,11 @@ public class HelvarControllerListener implements Runnable {
     private final int SHORT_SOCKET_TIMEOUT;
     private BufferedReader fromRouter;
     private DataOutputStream toRouter;
-    private final LinkedList<String[]> sendMessageList;
+    private final Deque<String> sendRepeatingMessageList;
+    private final Deque<String> sendOneTimeMessageList;
     private final int MAX_SEND_MESSAGE_LENGTH;
     private volatile boolean running;
     private final int controllerReg;
-    private final String REPEATING_MESSAGE = "repeating";
-    private final String ONE_TIME_MESSAGE = "oneTime";
 
     public HelvarControllerListener(String host, int port, int controllerReg) throws IOException {
         this.logger = Logger.getLogger(HelvarControllerListener.class);
@@ -32,7 +31,8 @@ public class HelvarControllerListener implements Runnable {
         this.port = port;
         this.SOCKET_TIMEOUT = 2000;
         this.SHORT_SOCKET_TIMEOUT = this.SOCKET_TIMEOUT / 10;
-        this.sendMessageList = new LinkedList<>();
+        this.sendRepeatingMessageList = new LinkedList<>();
+        this.sendOneTimeMessageList = new LinkedList<>();
         this.MAX_SEND_MESSAGE_LENGTH = 10;
         this.running = false;
         this.controllerReg = controllerReg;
@@ -44,15 +44,19 @@ public class HelvarControllerListener implements Runnable {
         try {
             int value;
             socket.setSoTimeout(SOCKET_TIMEOUT);
+            boolean setShortTimeout = false;
             while ((value = fromRouter.read()) != -1) {
                 sb.append((char) value);
                 char charValue = (char) value;
                 String stringValue = String.valueOf(charValue);
                 long duration = (System.nanoTime() - startTime) / 1000000;
-                if (stringValue.equals("#")) {
+
+                if (stringValue.equals("#") && !setShortTimeout) {
                     socket.setSoTimeout(SHORT_SOCKET_TIMEOUT);
+                    setShortTimeout = true;
                 }
-                if ((stringValue).equals("#") & sb.length() > MAX_SEND_MESSAGE_LENGTH & duration > SHORT_SOCKET_TIMEOUT)
+
+                if ((stringValue).equals("#") && (sb.length() > MAX_SEND_MESSAGE_LENGTH || duration > SHORT_SOCKET_TIMEOUT))
                     break;
             }
         } catch (SocketTimeoutException ignore) {
@@ -64,45 +68,31 @@ public class HelvarControllerListener implements Runnable {
         }
     }
 
-    private void send() throws IOException {
-        String[] toSendPoint = sendMessageList.pollFirst();
-        assert toSendPoint != null;
-        String type = toSendPoint[0];
-        String toSend = toSendPoint[1];
-        if (type.equals(REPEATING_MESSAGE)) {
-            setCycleSendMessage(toSend);
-        }
-        if (toSend != null) {
-            logger.info(String.format("Listener     SEND\tto Helvar.net %s:%s : value ---> %s", host, port, toSend));
-            byte[] dataInBytes = toSend.getBytes(StandardCharsets.UTF_8);
-            toRouter.writeInt(toSend.length());
-            toRouter.write(dataInBytes, 0, toSend.length());
+    private void send(String messageToSend, boolean responseToBacnet) throws IOException {
+        if (messageToSend != null) {
+            logger.info(String.format("Listener     SEND\tto Helvar.net %s:%s : value ---> %s", host, port, messageToSend));
+            byte[] dataInBytes = messageToSend.getBytes(StandardCharsets.UTF_8);
+            toRouter.writeInt(messageToSend.length());
+            toRouter.write(dataInBytes, 0, messageToSend.length());
             toRouter.flush();
-            HelvarReceivedObjectList.HELVAR_RECEIVED_OBJECT_LIST.addValueToTheEnd(host, toSend); // TODO Подумать, может всё же не стоит?
+        }
+        if (responseToBacnet) {
+            HelvarReceivedObjectList.HELVAR_RECEIVED_OBJECT_LIST.addValueToTheEnd(host, messageToSend);
         }
     }
 
-    public void setCycleSendMessage(String message) {
-        String[] toSendPoint = {REPEATING_MESSAGE, message};
-        sendMessageList.addLast(toSendPoint);
+    private String getFirstRepeatingMessage() {
+        String message = sendRepeatingMessageList.pollFirst();
+        setRepeatingMessage(message);
+        return message;
+    }
+
+    public void setRepeatingMessage(String message) {
+        sendRepeatingMessageList.addLast(message);
     }
 
     public void setBacnetSendMessage(String message) {
-        String[] toSendPoint = {ONE_TIME_MESSAGE, message};
-        if (sendMessageList.size() > 1) {
-            int n = 0;
-            while (sendMessageList.get(n)[0].equals(ONE_TIME_MESSAGE)) {
-                n++;
-                if (n >= sendMessageList.size()) {
-                    n = sendMessageList.size() - 1;
-                    break;
-                }
-            }
-            sendMessageList.add(n, toSendPoint);
-        } else {
-            sendMessageList.addLast(toSendPoint);
-        }
-
+        sendOneTimeMessageList.addLast(message);
     }
 
     private void setStatusToBacnet(boolean running) {
@@ -132,7 +122,12 @@ public class HelvarControllerListener implements Runnable {
                         setStatusToBacnet(true);
                         logger.info("Helvar Listener " + host + ":" + port + " - running");
                     }
-                    send();
+
+                    while (sendOneTimeMessageList.iterator().hasNext()) {
+                        send(sendOneTimeMessageList.pollFirst(), true);
+                        Thread.sleep(10);
+                    }
+                    send(getFirstRepeatingMessage(), false);
                     listen();
                 } catch (Exception e) {
                     setStatusToBacnet(false);

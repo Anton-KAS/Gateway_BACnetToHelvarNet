@@ -43,8 +43,8 @@ public enum HelvarPointsMap implements SetValueFromHelvarNet {
                         point.get("ELECTRIC_GROUP"),
                         instanceNumber
                 );
-
-                HelvarPoint helvarPoint = new HelvarPoint(ipController, instanceNumber, (boolean) point.get("DIMMING"), (int) point.get("FADE_TIME"), description);
+                int fade_time = Integer.parseInt(String.valueOf(point.get("FADE_TIME")));
+                HelvarPoint helvarPoint = new HelvarPoint(ipController, instanceNumber, (boolean) point.get("DIMMING"), fade_time, description);
 
                 Map<Integer, HelvarPoint> helvarPointMapByHost = helvarPointsMap.get(ipController);
                 if (helvarPointMapByHost == null) {

@@ -4,6 +4,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class ReceivedObjectProcessor {
+
     private static final String TERMINATOR = "#";
     private static final String DELIMITER = ",";
     private static final String PARAMETER_DELIMITER = ":";
@@ -49,7 +50,7 @@ public class ReceivedObjectProcessor {
                 case REPLY:
                     switch (parametersMap.get("C")) {
                         case C_LSIB:
-                            if (parametersMap.get("B") == null & !parametersMap.get("B").equals("1")) {
+                            if (parametersMap.get("B") == null && !parametersMap.get("B").equals("1")) {
                                 continue;
                             }
                             valueType = "av";
@@ -64,7 +65,7 @@ public class ReceivedObjectProcessor {
                 case COMMAND:
                     switch (parametersMap.get("C")) {
                         case C_RECALL_SCENE:
-                            if (parametersMap.get("B") == null & !parametersMap.get("B").equals("1")) {
+                            if (parametersMap.get("B") == null && !parametersMap.get("B").equals("1")) {
                                 continue;
                             }
                             valueType = "av";
@@ -77,7 +78,7 @@ public class ReceivedObjectProcessor {
                     }
                     break;
             }
-            if (valueType != null & parametersMap.get("G") != null & value != null) {
+            if (valueType != null && parametersMap.get("G") != null && value != null) {
                 helvarPointsMap.setValueFromHelvarNet(host, Integer.parseInt(parametersMap.get("G")), valueType, Float.parseFloat(value));
             }
         }
